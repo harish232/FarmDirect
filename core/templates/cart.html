@@ -1,0 +1,682 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --void:    #0d0d0f;
+  --deep:    #141417;
+  --charcoal:#1e1e23;
+  --iron:    #2a2a31;
+  --steel:   #3c3c47;
+  --silver:  #a0a0b4;
+  --mist:    #c8c8d8;
+  --snow:    #eeeef4;
+  --glass:   rgba(255,255,255,0.04);
+  --border:  rgba(255,255,255,0.06);
+}
+
+body { background: var(--void); }
+
+.cp-root {
+  min-height: 100vh;
+  background: var(--void);
+  background-image:
+    radial-gradient(ellipse 70% 55% at 12% 6%,  rgba(160,160,180,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 70% at 88% 92%, rgba(100,100,130,0.05) 0%, transparent 55%);
+  font-family: 'DM Sans', sans-serif;
+  padding: 40px 24px 80px;
+  position: relative;
+  overflow-x: hidden;
+}
+
+#particleCanvas {
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 0;
+}
+
+.cp-inner {
+  position: relative; z-index: 1;
+  max-width: 1180px; margin: 0 auto;
+}
+
+/* ══════════════════════════════
+   HERO
+══════════════════════════════ */
+.cp-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 32px 34px;
+  border-radius: 26px;
+  background: var(--charcoal);
+  border: 1px solid var(--border);
+  box-shadow: 0 40px 80px rgba(0,0,0,0.50);
+  position: relative; overflow: hidden;
+  margin-bottom: 24px;
+  opacity: 0;
+  animation: riseIn 0.75s cubic-bezier(.22,.68,0,1.2) 0.05s forwards;
+}
+
+.cp-hero::before {
+  content: "";
+  position: absolute;
+  width: 240px; height: 240px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(160,160,200,0.07) 0%, transparent 70%);
+  top: -100px; right: -70px; pointer-events: none;
+}
+.cp-hero::after {
+  content: "";
+  position: absolute;
+  width: 160px; height: 160px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(120,120,160,0.05) 0%, transparent 70%);
+  bottom: -50px; left: -40px; pointer-events: none;
+}
+
+.hero-shimmer {
+  position: absolute; top: 0; left: -100%;
+  width: 55%; height: 100%;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.04) 50%, transparent 60%);
+  animation: shimmerSweep 1.1s 0.8s forwards;
+  pointer-events: none;
+}
+@keyframes shimmerSweep { to { left: 160%; } }
+
+.cp-hero-text { position: relative; z-index: 1; }
+
+.cp-hero-eyebrow {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--silver); display: block; margin-bottom: 12px;
+}
+
+.cp-hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(28px, 3.5vw, 40px);
+  font-weight: 900; color: var(--snow);
+  line-height: 1.08; margin-bottom: 10px;
+}
+.cp-hero-title em {
+  font-style: italic;
+  background: linear-gradient(135deg, var(--mist), var(--silver));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.cp-hero-sub {
+  font-size: 14px; color: rgba(200,200,216,0.50);
+  line-height: 1.7; max-width: 480px;
+  position: relative; z-index: 1;
+}
+
+.cp-hero-badge {
+  position: relative; z-index: 1;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.10);
+  padding: 14px 22px; border-radius: 18px;
+  text-align: center; white-space: nowrap;
+  flex-shrink: 0;
+}
+.cp-hero-badge .badge-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 32px; font-weight: 700;
+  color: var(--snow); display: block;
+}
+.cp-hero-badge .badge-lbl {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.10em; text-transform: uppercase;
+  color: rgba(200,200,216,0.45);
+}
+
+/* ══════════════════════════════
+   LAYOUT
+══════════════════════════════ */
+.cp-layout {
+  display: grid;
+  grid-template-columns: 1.55fr 0.85fr;
+  gap: 22px;
+  align-items: start;
+  opacity: 0;
+  animation: riseIn 0.78s cubic-bezier(.22,.68,0,1.2) 0.22s forwards;
+}
+
+/* ══════════════════════════════
+   ITEMS PANEL
+══════════════════════════════ */
+.cp-items-panel {
+  background: var(--charcoal);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  box-shadow: 0 32px 64px rgba(0,0,0,0.40);
+}
+
+.panel-head {
+  padding: 24px 26px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.panel-kicker {
+  display: inline-block;
+  padding: 6px 13px; border-radius: 999px;
+  background: rgba(160,160,180,0.10);
+  border: 1px solid rgba(160,160,180,0.14);
+  color: var(--silver);
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.panel-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px; font-weight: 700;
+  color: var(--snow); margin-bottom: 5px;
+}
+
+.panel-subtitle {
+  font-size: 13px; color: rgba(200,200,216,0.42); line-height: 1.7;
+}
+
+.cp-items-list { padding: 16px 20px 20px; }
+
+/* Cart item card */
+.ci-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px; align-items: center;
+  padding: 18px;
+  border: 1px solid rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.03);
+  border-radius: 18px;
+  margin-bottom: 12px;
+  transition: border-color .25s, background .25s, transform .25s;
+}
+.ci-card:last-child { margin-bottom: 0; }
+.ci-card:hover {
+  border-color: rgba(160,160,180,0.16);
+  background: rgba(255,255,255,0.045);
+  transform: translateY(-2px);
+}
+
+.ci-left { display: flex; align-items: center; gap: 16px; min-width: 0; }
+
+.ci-icon {
+  width: 62px; height: 62px; border-radius: 16px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.07);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; flex-shrink: 0;
+  transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+}
+.ci-card:hover .ci-icon { transform: scale(1.08) rotate(-4deg); }
+
+.ci-name {
+  font-size: 16px; font-weight: 700;
+  color: var(--snow); margin-bottom: 5px;
+}
+.ci-meta {
+  font-size: 12.5px; color: rgba(200,200,216,0.45); line-height: 1.6;
+}
+
+.ci-right {
+  display: flex; align-items: center;
+  gap: 14px; flex-wrap: wrap; justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.ci-price { text-align: right; }
+.ci-price .lbl {
+  display: block; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.10em; text-transform: uppercase;
+  color: rgba(200,200,216,0.38); margin-bottom: 4px;
+}
+.ci-price .val {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px; font-weight: 700; color: var(--mist);
+}
+
+.remove-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 16px; border-radius: 999px;
+  background: rgba(211,47,47,0.10);
+  border: 1px solid rgba(211,47,47,0.20);
+  color: #f58c8c;
+  font-size: 12.5px; font-weight: 700;
+  text-decoration: none;
+  transition: background .2s, border-color .2s;
+}
+.remove-btn:hover { background: rgba(211,47,47,0.20); border-color: rgba(211,47,47,0.35); }
+
+/* ══════════════════════════════
+   SUMMARY PANEL
+══════════════════════════════ */
+.cp-summary {
+  background: var(--charcoal);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 24px 22px;
+  box-shadow: 0 32px 64px rgba(0,0,0,0.40);
+  position: sticky; top: 96px;
+}
+
+.summary-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px; font-weight: 700;
+  color: var(--snow); margin-bottom: 5px;
+}
+.summary-sub { font-size: 13px; color: rgba(200,200,216,0.42); line-height: 1.7; margin-bottom: 18px; }
+
+/* Summary box */
+.summary-box {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 18px;
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+.s-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 13.5px; color: rgba(200,200,216,0.52);
+  margin-bottom: 12px;
+}
+.s-row:last-child { margin-bottom: 0; }
+.s-row strong { color: var(--mist); font-weight: 700; }
+
+.s-total {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(255,255,255,0.08);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.s-total-lbl { font-size: 13px; font-weight: 700; color: rgba(200,200,216,0.60); }
+.s-total-val {
+  font-family: 'Playfair Display', serif;
+  font-size: 30px; font-weight: 700; color: var(--snow);
+}
+
+/* Info note */
+.s-note {
+  background: rgba(212,168,50,0.08);
+  border: 1px solid rgba(212,168,50,0.18);
+  color: #f5c67e;
+  padding: 12px 14px; border-radius: 14px;
+  font-size: 12.5px; line-height: 1.65;
+  margin-bottom: 18px;
+  display: flex; gap: 9px;
+}
+.s-note span { flex-shrink: 0; }
+
+/* Form fields */
+.fg { margin-bottom: 13px; }
+.fg label {
+  display: block; font-size: 11px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: rgba(200,200,216,0.50); margin-bottom: 7px;
+}
+
+/* Floating label */
+.fl-wrap { position: relative; }
+.fl-wrap .fi { padding-top: 20px; padding-bottom: 9px; }
+.fl-wrap .fl-label {
+  position: absolute; left: 14px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px; color: #6a6a7e; font-weight: 500;
+  pointer-events: none;
+  transition: all 0.22s cubic-bezier(.4,0,.2,1);
+  text-transform: none; letter-spacing: 0;
+}
+.fl-wrap .fi:focus ~ .fl-label,
+.fl-wrap .fi:not(:placeholder-shown) ~ .fl-label {
+  top: 10px; transform: none;
+  font-size: 9.5px; font-weight: 700;
+  color: var(--steel);
+  letter-spacing: 0.07em; text-transform: uppercase;
+}
+
+.fi {
+  width: 100%; padding: 12px 14px;
+  border-radius: 13px;
+  border: 1.5px solid #d8d8e4;
+  background: #fafafc;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13.5px; color: #18181f;
+  outline: none;
+  transition: border-color .22s, box-shadow .22s, transform .15s;
+  -webkit-appearance: none; appearance: none;
+  resize: vertical;
+}
+.fi::placeholder { color: transparent; }
+.fi:focus {
+  border-color: var(--steel);
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(60,60,71,0.10);
+  transform: translateY(-1px);
+}
+
+select.fi {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%233c3c47' stroke-width='1.7' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 13px center;
+  padding-right: 36px; cursor: pointer;
+}
+
+.fg-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 13px; }
+
+/* Checkout buttons */
+.fc-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08) 30%, rgba(255,255,255,0.08) 70%, transparent);
+  margin: 18px 0;
+}
+
+.btn-checkout {
+  display: block; width: 100%; text-align: center;
+  padding: 14px 18px; border-radius: 999px; border: none;
+  background: linear-gradient(135deg, var(--iron), var(--steel));
+  color: var(--snow);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(255,255,255,0.08);
+  transition: transform .2s, box-shadow .2s;
+  margin-bottom: 10px;
+  position: relative; overflow: hidden;
+}
+.btn-checkout::before {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.10), transparent);
+}
+.btn-checkout:hover { transform: translateY(-2px); box-shadow: 0 18px 40px rgba(0,0,0,0.45); }
+
+.btn-continue {
+  display: block; text-align: center;
+  padding: 13px 18px; border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.09);
+  background: rgba(255,255,255,0.04);
+  color: var(--silver);
+  font-size: 14px; font-weight: 700;
+  text-decoration: none;
+  transition: border-color .2s, color .2s;
+}
+.btn-continue:hover { border-color: var(--silver); color: var(--mist); }
+
+/* ══════════════════════════════
+   EMPTY STATE
+══════════════════════════════ */
+.cp-empty {
+  max-width: 720px; margin: 0 auto;
+  background: var(--charcoal);
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  text-align: center;
+  padding: 60px 32px;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.45);
+  opacity: 0;
+  animation: riseIn 0.78s cubic-bezier(.22,.68,0,1.2) 0.1s forwards;
+}
+
+.empty-icon {
+  width: 90px; height: 90px;
+  margin: 0 auto 22px;
+  border-radius: 24px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.07);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 40px;
+}
+
+.cp-empty h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px; font-weight: 700;
+  color: var(--snow); margin-bottom: 12px;
+}
+.cp-empty p {
+  font-size: 14px; color: rgba(200,200,216,0.44);
+  max-width: 400px; margin: 0 auto 28px; line-height: 1.75;
+}
+
+.btn-browse {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 14px 28px; border-radius: 999px;
+  background: linear-gradient(135deg, var(--iron), var(--steel));
+  color: var(--snow);
+  font-size: 14px; font-weight: 700; text-decoration: none;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(255,255,255,0.08);
+  transition: transform .2s, box-shadow .2s;
+}
+.btn-browse:hover { transform: translateY(-2px); box-shadow: 0 18px 36px rgba(0,0,0,0.45); }
+
+/* ══════════════════════════════
+   ANIMATIONS
+══════════════════════════════ */
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ══════════════════════════════
+   RESPONSIVE
+══════════════════════════════ */
+@media (max-width: 980px) {
+  .cp-layout { grid-template-columns: 1fr; }
+  .cp-summary { position: static; }
+  .cp-hero    { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 640px) {
+  .cp-root { padding: 24px 14px 60px; }
+  .cp-hero { padding: 22px 18px; border-radius: 20px; }
+  .ci-card { flex-direction: column; align-items: flex-start; }
+  .ci-right { width: 100%; justify-content: space-between; }
+  .fg-2 { grid-template-columns: 1fr; }
+  .cp-hero-title { font-size: 28px; }
+}
+</style>
+
+<canvas id="particleCanvas"></canvas>
+
+<div class="cp-root">
+  <div class="cp-inner">
+
+    {% if cart_items %}
+
+    <!-- HERO -->
+    <div class="cp-hero">
+      <div class="hero-shimmer"></div>
+      <div class="cp-hero-text">
+        <span class="cp-hero-eyebrow">Shopping Cart</span>
+        <h1 class="cp-hero-title">Your <em>Cart</em> 🛒</h1>
+        <p class="cp-hero-sub">Review your selected farm-fresh products before placing the order.</p>
+      </div>
+      <div class="cp-hero-badge">
+        <span class="badge-num">{{ cart_items|length }}</span>
+        <span class="badge-lbl">item{{ cart_items|length|pluralize }} in cart</span>
+      </div>
+    </div>
+
+    <!-- MAIN LAYOUT -->
+    <div class="cp-layout">
+
+      <!-- ITEMS PANEL -->
+      <div class="cp-items-panel">
+        <div class="panel-head">
+          <div class="panel-kicker">Selected Products</div>
+          <div class="panel-title">Cart Items</div>
+          <div class="panel-subtitle">Check quantities, price per unit, and total for each product.</div>
+        </div>
+
+        <div class="cp-items-list">
+          {% for item in cart_items %}
+          <div class="ci-card">
+            <div class="ci-left">
+              <div class="ci-icon"></div>
+              <div>
+                <div class="ci-name">{{ item.product.name }}</div>
+                <div class="ci-meta">
+                  Quantity: {{ item.quantity }} {{ item.product.unit }}<br>
+                  Price: ₹{{ item.product.price }} per {{ item.product.unit }}
+                </div>
+              </div>
+            </div>
+            <div class="ci-right">
+              <div class="ci-price">
+                <span class="lbl">Item Total</span>
+                <span class="val">₹{{ item.total }}</span>
+              </div>
+              <a href="{% url 'remove_from_cart' item.pk %}" class="remove-btn"
+                 onclick="return confirm('Remove this item from cart?')">✕ Remove</a>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- SUMMARY PANEL -->
+      <div class="cp-summary">
+        <div class="panel-kicker">Checkout Summary</div>
+        <div class="summary-title">Order Overview</div>
+        <div class="summary-sub">Fill in delivery details and place your order.</div>
+
+        <div class="summary-box">
+          <div class="s-row"><span>Total Items</span><strong>{{ cart_items|length }}</strong></div>
+          <div class="s-row"><span>Delivery Charges</span><strong>₹0</strong></div>
+          <div class="s-row"><span>Platform Fee</span><strong>₹0</strong></div>
+          <div class="s-total">
+            <span class="s-total-lbl">Total Amount</span>
+            <span class="s-total-val">₹{{ total }}</span>
+          </div>
+        </div>
+
+        <div class="s-note">
+          <span>💡</span>
+          Fill in your delivery address and payment method before placing the order.
+        </div>
+
+        <form method="POST" action="{% url 'place_order' %}">
+          {% csrf_token %}
+
+          <div class="fg">
+            <label>Full Address</label>
+            <div class="fl-wrap">
+              <textarea name="address" required class="fi"
+                style="min-height:68px;" placeholder=" "></textarea>
+              <span class="fl-label">Door no, Street, Area...</span>
+            </div>
+          </div>
+
+          <div class="fg-2">
+            <div>
+              <div class="fg" style="margin-bottom:0;">
+                <label>City</label>
+                <div class="fl-wrap">
+                  <input type="text" name="city" required class="fi" placeholder=" ">
+                  <span class="fl-label">e.g. Bengaluru</span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="fg" style="margin-bottom:0;">
+                <label>Pincode</label>
+                <div class="fl-wrap">
+                  <input type="text" name="pincode" required maxlength="10" class="fi" placeholder=" ">
+                  <span class="fl-label">e.g. 560001</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="fg">
+            <label>Phone Number</label>
+            <div class="fl-wrap">
+              <input type="tel" name="phone_number" required maxlength="15" class="fi" placeholder=" ">
+              <span class="fl-label">e.g. 9876543210</span>
+            </div>
+          </div>
+
+          <div class="fg">
+            <label>Payment Method</label>
+            <select name="payment_method" class="fi">
+              <option value="cod">💵 Cash on Delivery</option>
+              <option value="upi">📱 UPI</option>
+              <option value="card">💳 Card</option>
+            </select>
+          </div>
+
+          <div class="fc-divider"></div>
+
+          <button type="submit" class="btn-checkout">Place Order ✓</button>
+          <a href="{% url 'product_list' %}" class="btn-continue">Continue Shopping</a>
+        </form>
+      </div>
+
+    </div>
+
+    {% else %}
+
+    <!-- EMPTY STATE -->
+    <div class="cp-empty">
+      <div class="empty-icon">🛒</div>
+      <h2>Your cart is empty</h2>
+      <p>No products selected yet. Browse fresh products and add something good!</p>
+      <a href="{% url 'product_list' %}" class="btn-browse">Browse Products →</a>
+    </div>
+
+    {% endif %}
+
+  </div>
+</div>
+
+<script>
+/* Silver pulsing particles — consistent across all pages */
+(function() {
+  const canvas = document.getElementById('particleCanvas');
+  const ctx    = canvas.getContext('2d');
+  let W, H, particles = [];
+  const COUNT = 30;
+
+  function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+  function rand(a,b) { return a + Math.random()*(b-a); }
+
+  function spawn() {
+    return {
+      x: rand(0,W), y: rand(-40,H+40),
+      r: rand(1, 3.5),
+      vx: rand(-0.18, 0.18), vy: rand(-0.45, -0.12),
+      alpha: rand(0.06, 0.28),
+      pulse: rand(0, Math.PI*2), pv: rand(0.012, 0.025)
+    };
+  }
+
+  function init() {
+    resize();
+    particles = Array.from({length: COUNT}, spawn);
+    particles.forEach(p => { p.y = rand(0, H); });
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => {
+      p.pulse += p.pv;
+      const a = p.alpha * (0.65 + 0.35 * Math.sin(p.pulse));
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(180,180,200,${a})`;
+      ctx.fill();
+      p.x += p.vx; p.y += p.vy;
+      if (p.y < -20) { Object.assign(p, spawn()); p.y = H+10; }
+      if (p.x < -10)  p.x = W+10;
+      if (p.x > W+10) p.x = -10;
+    });
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize);
+  init(); draw();
+})();
+</script>
+
+{% endblock %}

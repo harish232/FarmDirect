@@ -1,0 +1,451 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --void:    #8989d3;   /* same as farmer_earnings */
+  --charcoal:#1e1e23;   /* FIXED: was #0b0b97 (bright blue!) */
+  --iron:    #2a2a31;
+  --steel:   #3c3c47;
+  --silver:  #010116;   /* FIXED: same as farmer_earnings */
+  --mist:    #c8c8d8;
+  --snow:    #eeeef4;
+  --glass:   rgba(255,255,255,0.04);
+  --border:  rgba(255,255,255,0.06);
+}
+
+body { background: var(--void); } /* FIXED: was var(--silver) → light grey */
+
+.db-root {
+  min-height: 100vh;
+  background: var(--void);
+  background-image:
+    radial-gradient(ellipse 65% 50% at 10% 5%,  rgba(160,160,180,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 65% at 90% 95%, rgba(100,100,130,0.05) 0%, transparent 55%);
+  font-family: 'DM Sans', sans-serif;
+  padding: 40px 24px 80px;
+  position: relative;
+  overflow-x: hidden;
+}
+
+#particleCanvas {
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 0;
+}
+
+.db-inner {
+  position: relative; z-index: 1;
+  max-width: 1200px; margin: 0 auto;
+}
+
+/* ── TOPBAR ── */
+.db-topbar {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 40px;
+  opacity: 0;
+  animation: riseIn 0.7s cubic-bezier(.22,.68,0,1.2) 0.05s forwards;
+}
+
+.db-eyebrow {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--silver); display: block; margin-bottom: 8px;
+}
+
+.db-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(26px, 3vw, 36px);
+  font-weight: 900;
+  color: var(--snow);
+  line-height: 1.1;
+}
+.db-title em {
+  font-style: italic;
+  background: linear-gradient(135deg, var(--mist), #a0a0b4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.db-badge {
+  margin-left: auto;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(200,200,216,0.18);
+  background: rgba(200,200,216,0.06);
+  color: var(--mist);
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* ── STAT CARDS ── */
+.db-stats {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-bottom: 40px;
+  opacity: 0;
+  animation: riseIn 0.75s cubic-bezier(.22,.68,0,1.2) 0.18s forwards;
+}
+
+.stat-card {
+  background: var(--charcoal); /* FIXED: now proper dark #1e1e23 */
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 22px 20px 18px;
+  position: relative;
+  overflow: hidden;
+  transition: transform .25s, border-color .25s, box-shadow .25s;
+  cursor: default;
+}
+.stat-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(160,160,180,0.20);
+  box-shadow: 0 20px 44px rgba(0,0,0,0.44);
+}
+
+.stat-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  border-radius: 20px 20px 0 0;
+}
+.stat-card.c1::before { background: linear-gradient(90deg, #5b8dee, #8ab4ff); }
+.stat-card.c2::before { background: linear-gradient(90deg, #3d9b6e, #74d4a2); }
+.stat-card.c3::before { background: linear-gradient(90deg, #8b6dee, #c3a4ff); }
+.stat-card.c4::before { background: linear-gradient(90deg, #d4934a, #f5c67e); }
+.stat-card.c5::before { background: linear-gradient(90deg, #d45050, #f58c8c); }
+
+.stat-icon {
+  font-size: 22px; margin-bottom: 12px;
+  display: block;
+}
+
+.stat-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px; font-weight: 700;
+  color: var(--snow);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.stat-lbl {
+  font-size: 11.5px; font-weight: 600;
+  color: rgba(200,200,216,0.45);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.stat-orb {
+  position: absolute;
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  top: -20px; right: -20px;
+  opacity: 0.07;
+}
+.stat-card.c1 .stat-orb { background: #5b8dee; }
+.stat-card.c2 .stat-orb { background: #3d9b6e; }
+.stat-card.c3 .stat-orb { background: #8b6dee; }
+.stat-card.c4 .stat-orb { background: #d4934a; }
+.stat-card.c5 .stat-orb { background: #d45050; }
+
+/* ── ORDERS SECTION ── */
+.db-orders {
+  opacity: 0;
+  animation: riseIn 0.8s cubic-bezier(.22,.68,0,1.2) 0.32s forwards;
+}
+
+.section-header {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 18px;
+}
+
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px; font-weight: 700;
+  color: var(--snow);
+}
+
+.section-count {
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(160,160,180,0.10);
+  border: 1px solid rgba(160,160,180,0.14);
+  color: #a0a0b4;
+  font-size: 12px; font-weight: 700;
+}
+
+/* ── TABLE ── */
+.table-card {
+  background: var(--charcoal); /* FIXED: proper dark background */
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 32px 64px rgba(0,0,0,0.45);
+}
+
+.db-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.db-table thead tr {
+  background: var(--iron);
+  border-bottom: 1px solid var(--border);
+}
+
+.db-table thead th {
+  padding: 14px 16px;
+  font-size: 11px; font-weight: 700;
+  color: rgba(200,200,216,0.50); /* FIXED: was dark/invisible */
+  letter-spacing: 0.12em; text-transform: uppercase;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.db-table tbody tr {
+  border-bottom: 1px solid rgba(255,255,255,0.04); /* FIXED: was red(...) invalid */
+  transition: background .18s;
+}
+.db-table tbody tr:last-child { border-bottom: none; }
+.db-table tbody tr:hover { background: rgba(255,255,255,0.025); }
+
+.db-table tbody td {
+  padding: 13px 16px;
+  font-size: 13.5px;
+  color: rgba(238,238,244,0.80); /* FIXED: was rgba(2,2,19,0.75) near-black */
+  vertical-align: middle;
+}
+
+.td-id {
+  font-weight: 700; font-size: 12px;
+  color: #a0a0b4 !important;
+}
+
+.td-name { font-weight: 600; color: var(--snow) !important; }
+
+.td-amount {
+  font-family: 'Playfair Display', serif;
+  font-size: 14px !important;
+  color: var(--mist) !important;
+  font-weight: 700;
+}
+
+/* Status badges */
+.st-badge {
+  display: inline-block;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: capitalize;
+}
+.st-pending   { background: rgba(212,147,74,0.15);  color: #f5c67e; border: 1px solid rgba(212,147,74,0.25); }
+.st-delivered { background: rgba(61,155,110,0.15);  color: #74d4a2; border: 1px solid rgba(61,155,110,0.25); }
+.st-cancelled { background: rgba(212,80,80,0.15);   color: #f58c8c; border: 1px solid rgba(212,80,80,0.25); }
+.st-default   { background: rgba(160,160,180,0.10); color: #a0a0b4; border: 1px solid rgba(160,160,180,0.18); }
+
+/* Payment pill */
+.pay-pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 10.5px; font-weight: 700;
+  letter-spacing: 0.08em;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(200,200,216,0.65);
+}
+
+.td-date { font-size: 12px !important; color: rgba(200,200,216,0.42) !important; }
+
+/* Empty state */
+.empty-state {
+  padding: 60px 20px;
+  text-align: center;
+  color: rgba(200,200,216,0.30);
+}
+.empty-state span { font-size: 40px; display: block; margin-bottom: 12px; }
+.empty-state p { font-size: 14px; line-height: 1.7; }
+
+/* ── ANIMATIONS ── */
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .db-stats { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 600px) {
+  .db-stats { grid-template-columns: 1fr 1fr; }
+  .db-root { padding: 24px 14px 60px; }
+  .db-table thead th, .db-table tbody td { padding: 10px 10px; }
+}
+</style>
+
+<canvas id="particleCanvas"></canvas>
+
+<div class="db-root">
+  <div class="db-inner">
+
+    <!-- TOPBAR -->
+    <div class="db-topbar">
+      <div>
+        <span class="db-eyebrow">Overview</span>
+        <h1 class="db-title">Admin <em>Dashboard</em></h1>
+      </div>
+      <div class="db-badge">⚙️ Admin Panel</div>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="db-stats">
+      <div class="stat-card c1">
+        <div class="stat-orb"></div>
+        <span class="stat-icon">🛒</span>
+        <div class="stat-num">{{ total_orders }}</div>
+        <div class="stat-lbl">Total Orders</div>
+      </div>
+      <div class="stat-card c2">
+        <div class="stat-orb"></div>
+        <span class="stat-icon">💰</span>
+        <div class="stat-num">₹{{ total_revenue|floatformat:0 }}</div>
+        <div class="stat-lbl">Revenue</div>
+      </div>
+      <div class="stat-card c3">
+        <div class="stat-orb"></div>
+        <span class="stat-icon">🚜</span>
+        <div class="stat-num">{{ total_farmers }}</div>
+        <div class="stat-lbl">Farmers</div>
+      </div>
+      <div class="stat-card c4">
+        <div class="stat-orb"></div>
+        <span class="stat-icon">👤</span>
+        <div class="stat-num">{{ total_customers }}</div>
+        <div class="stat-lbl">Customers</div>
+      </div>
+      <div class="stat-card c5">
+        <div class="stat-orb"></div>
+        <span class="stat-icon">⏳</span>
+        <div class="stat-num">{{ pending_orders }}</div>
+        <div class="stat-lbl">Pending</div>
+      </div>
+    </div>
+
+    <!-- ORDERS TABLE -->
+    <div class="db-orders">
+      <div class="section-header">
+        <h2 class="section-title">Recent Orders</h2>
+        <span class="section-count">{{ recent_orders|length }} entries</span>
+      </div>
+
+      <div class="table-card">
+        <table class="db-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Customer</th>
+              <th>Product</th>
+              <th>Qty</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Payment</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for o in recent_orders %}
+            <tr>
+              <td class="td-id">#{{ o.id }}</td>
+              <td class="td-name">{{ o.customer.username }}</td>
+              <td>{{ o.product.name }}</td>
+              <td>{{ o.quantity }}</td>
+              <td class="td-amount">₹{{ o.total_price }}</td>
+              <td>
+                {% if o.status == "pending" %}
+                  <span class="st-badge st-pending">{{ o.status }}</span>
+                {% elif o.status == "delivered" %}
+                  <span class="st-badge st-delivered">{{ o.status }}</span>
+                {% elif o.status == "cancelled" %}
+                  <span class="st-badge st-cancelled">{{ o.status }}</span>
+                {% else %}
+                  <span class="st-badge st-default">{{ o.status }}</span>
+                {% endif %}
+              </td>
+              <td><span class="pay-pill">{{ o.payment_method|upper }}</span></td>
+              <td class="td-date">{{ o.ordered_at|date:"d M Y" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="8">
+                <div class="empty-state">
+                  <span>📭</span>
+                  <p>No recent orders found.</p>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function() {
+  const canvas = document.getElementById('particleCanvas');
+  const ctx    = canvas.getContext('2d');
+  let W, H, particles = [];
+  const COUNT = 30;
+
+  function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+  function rand(a,b) { return a + Math.random()*(b-a); }
+
+  function spawn() {
+    return {
+      x: rand(0,W), y: rand(-40,H+40),
+      r: rand(1,3.5),
+      vx: rand(-0.18,0.18), vy: rand(-0.45,-0.12),
+      alpha: rand(0.06,0.28),
+      pulse: rand(0,Math.PI*2), pv: rand(0.012,0.025)
+    };
+  }
+
+  function init() {
+    resize();
+    particles = Array.from({length:COUNT}, spawn);
+    particles.forEach(p => { p.y = rand(0,H); });
+  }
+
+  function draw() {
+    ctx.clearRect(0,0,W,H);
+    particles.forEach(p => {
+      p.pulse += p.pv;
+      const a = p.alpha * (0.65 + 0.35*Math.sin(p.pulse));
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(180,180,200,${a})`;
+      ctx.fill();
+      p.x += p.vx; p.y += p.vy;
+      if (p.y < -20) { Object.assign(p,spawn()); p.y = H+10; }
+      if (p.x < -10)  p.x = W+10;
+      if (p.x > W+10) p.x = -10;
+    });
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize);
+  init(); draw();
+})();
+</script>
+
+{% endblock %}

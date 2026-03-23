@@ -1,0 +1,16 @@
+import os
+from celery import Celery
+from celery.schedules import crontab
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'farmermarket.settings')
+app = Celery('farmermarket')
+app.config_from_object('django.conf:settings', namespace='CELERY')
+app.autodiscover_tasks()
+
+# ── Beat Schedule: Run subscription auto-orders at 6 AM every day ──────────
+app.conf.beat_schedule = {
+    'process-subscription-orders-daily': {
+        'task': 'core.tasks.subscriptions.process_subscription_orders',
+        'schedule': crontab(hour=6, minute=0),
+    },
+}

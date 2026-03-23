@@ -1,0 +1,635 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --void:    #0d0d0f;
+  --charcoal:#1e1e23;
+  --iron:    #2a2a31;
+  --steel:   #3c3c47;
+  --silver:  #a0a0b4;
+  --mist:    #c8c8d8;
+  --snow:    #eeeef4;
+  --glass:   rgba(255,255,255,0.04);
+  --border:  rgba(255,255,255,0.06);
+}
+
+body { background: var(--void); }
+
+.ep-root {
+  min-height: 100vh;
+  background: var(--void);
+  background-image:
+    radial-gradient(ellipse 70% 55% at 12% 6%,  rgba(160,160,180,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 70% at 88% 92%, rgba(100,100,130,0.05) 0%, transparent 55%);
+  font-family: 'DM Sans', sans-serif;
+  padding: 40px 24px 80px;
+  position: relative;
+  overflow-x: hidden;
+}
+
+#particleCanvas {
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 0;
+}
+
+.ep-inner {
+  position: relative; z-index: 1;
+  max-width: 1120px; margin: 0 auto;
+}
+
+/* ── TOPBAR ── */
+.ep-topbar {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 40px;
+  opacity: 0;
+  animation: riseIn 0.7s cubic-bezier(.22,.68,0,1.2) 0.05s forwards;
+}
+
+.ep-back {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 20px; border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.09);
+  color: var(--mist); font-size: 13px; font-weight: 500;
+  text-decoration: none;
+  transition: border-color .25s, background .25s;
+}
+.ep-back:hover { border-color: var(--silver); background: rgba(160,160,180,0.08); }
+
+.ep-badge {
+  margin-left: auto;
+  padding: 8px 16px; border-radius: 999px;
+  border: 1px solid rgba(200,200,216,0.18);
+  background: rgba(200,200,216,0.06);
+  color: var(--mist);
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+
+/* ── MAIN GRID ── */
+.ep-grid {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 26px;
+  align-items: start;
+  opacity: 0;
+  animation: riseIn 0.78s cubic-bezier(.22,.68,0,1.2) 0.18s forwards;
+}
+
+/* ══════════════════════════════
+   LEFT PANEL
+══════════════════════════════ */
+.ep-left {
+  background: var(--charcoal);
+  border: 1px solid var(--border);
+  border-radius: 26px;
+  padding: 32px 28px;
+  position: relative; overflow: hidden;
+  box-shadow: 0 32px 64px rgba(0,0,0,0.44);
+}
+
+/* top accent line */
+.ep-left::before {
+  content: "";
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 2px; border-radius: 26px 26px 0 0;
+  background: linear-gradient(90deg, var(--steel), var(--silver), var(--mist));
+}
+
+/* shimmer on load */
+.ep-left::after {
+  content: "";
+  position: absolute; top: 0; left: -100%;
+  width: 55%; height: 100%;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.04) 50%, transparent 60%);
+  animation: shimmerSweep 1.1s 0.6s forwards;
+  pointer-events: none;
+}
+@keyframes shimmerSweep { to { left: 160%; } }
+
+.ep-eyebrow {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--silver); display: block; margin-bottom: 16px;
+  position: relative; z-index: 1;
+}
+
+.ep-headline {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(26px, 3vw, 36px);
+  font-weight: 900; color: var(--snow);
+  line-height: 1.1; margin-bottom: 12px;
+  position: relative; z-index: 1;
+}
+.ep-headline em {
+  font-style: italic;
+  background: linear-gradient(135deg, var(--mist), var(--silver));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.ep-desc {
+  font-size: 14px; line-height: 1.85;
+  color: rgba(200,200,216,0.50);
+  margin-bottom: 22px;
+  position: relative; z-index: 1;
+}
+
+/* Product preview card */
+.ep-preview {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 20px; padding: 20px;
+  margin-bottom: 20px;
+  position: relative; z-index: 1;
+  transition: border-color .25s;
+}
+.ep-preview:hover { border-color: rgba(160,160,180,0.18); }
+
+.ep-preview-icon {
+  font-size: 48px; text-align: center;
+  padding: 24px 0 16px;
+}
+
+.ep-preview-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px; font-weight: 700;
+  color: var(--snow); margin-bottom: 8px;
+}
+
+.ep-preview-meta {
+  font-size: 12.5px;
+  color: rgba(200,200,216,0.48);
+  line-height: 1.7;
+}
+
+.ep-preview-meta strong { color: var(--mist); }
+
+/* Tip cards */
+.ep-tips { display: grid; gap: 11px; position: relative; z-index: 1; }
+
+.ep-tip {
+  display: flex; gap: 12px; align-items: flex-start;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 16px; padding: 14px 15px;
+  transition: border-color .25s, transform .25s;
+}
+.ep-tip:hover { border-color: rgba(160,160,180,0.16); transform: translateX(5px); }
+
+.ep-tip-icon {
+  width: 38px; height: 38px; border-radius: 12px;
+  background: rgba(160,160,180,0.10);
+  border: 1px solid rgba(160,160,180,0.12);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; flex-shrink: 0;
+}
+
+.ep-tip h4 { font-size: 13.5px; font-weight: 700; color: var(--snow); margin-bottom: 4px; }
+.ep-tip p  { font-size: 12px; line-height: 1.6; color: rgba(200,200,216,0.46); }
+
+/* ══════════════════════════════
+   RIGHT FORM CARD
+══════════════════════════════ */
+.ep-form-card {
+  background: #f2f2f5;
+  border-radius: 26px;
+  padding: 36px 32px;
+  position: relative; overflow: hidden;
+  box-shadow: 0 48px 96px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04);
+}
+
+/* shimmer sweep */
+.ep-form-card::after {
+  content: "";
+  position: absolute; top: 0; left: -100%;
+  width: 60%; height: 100%;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.18) 50%, transparent 60%);
+  animation: shimmerSweep 1.1s 0.85s forwards;
+  pointer-events: none;
+}
+
+.fc-leaf {
+  position: absolute; top: 14px; right: 18px;
+  font-size: 58px; opacity: 0.07;
+  transform: rotate(15deg); pointer-events: none;
+}
+
+.fc-kicker {
+  display: inline-block; padding: 6px 13px; border-radius: 999px;
+  background: #e0e0ea; color: #3c3c50;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.10em; text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.fc-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 30px; font-weight: 900;
+  color: #18181f; margin-bottom: 6px;
+}
+
+.fc-sub { font-size: 13.5px; color: #7a7a8e; margin-bottom: 26px; line-height: 1.7; }
+
+/* Form fields */
+.fg { margin-bottom: 18px; }
+.fg-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+.fg > label {
+  display: block; font-size: 11.5px; font-weight: 700;
+  color: #3a3a4a; letter-spacing: 0.08em;
+  text-transform: uppercase; margin-bottom: 7px;
+}
+.fg small {
+  display: block; font-size: 11.5px; color: #8a8a9e;
+  margin-top: -3px; margin-bottom: 7px;
+  font-weight: 400; letter-spacing: 0; text-transform: none;
+}
+
+/* Floating label */
+.fl-wrap { position: relative; }
+.fl-wrap .fi { padding-top: 22px; padding-bottom: 10px; }
+.fl-wrap .fl-label {
+  position: absolute; left: 16px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 13.5px; color: #8a8a9e; font-weight: 500;
+  pointer-events: none;
+  transition: all 0.22s cubic-bezier(.4,0,.2,1);
+  text-transform: none; letter-spacing: 0;
+}
+.fl-wrap .fi:focus ~ .fl-label,
+.fl-wrap .fi:not(:placeholder-shown) ~ .fl-label {
+  top: 12px; transform: none;
+  font-size: 10px; font-weight: 700;
+  color: var(--steel);
+  letter-spacing: 0.07em; text-transform: uppercase;
+}
+
+.fi {
+  width: 100%; padding: 14px 16px;
+  border-radius: 14px;
+  border: 1.5px solid #d8d8e4;
+  background: #fafafc;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; color: #18181f;
+  outline: none;
+  transition: border-color .22s, box-shadow .22s, background .22s, transform .15s;
+  -webkit-appearance: none; appearance: none;
+}
+.fi::placeholder { color: transparent; }
+.fi:focus {
+  border-color: var(--steel);
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(60,60,71,0.10);
+  transform: translateY(-1px);
+}
+
+select.fi {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%233c3c47' stroke-width='1.7' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 38px; cursor: pointer;
+}
+
+/* Unit pills */
+.unit-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
+.unit-pill input[type="radio"] { display: none; }
+.unit-pill label {
+  display: inline-block; padding: 8px 16px;
+  border-radius: 999px;
+  border: 1.5px solid #d8d8e4;
+  background: #fafafc; color: #6a6a7e;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  transition: all .2s cubic-bezier(.34,1.56,.64,1);
+  user-select: none;
+}
+.unit-pill input:checked + label {
+  background: var(--charcoal); border-color: var(--charcoal);
+  color: #fff;
+  box-shadow: 0 4px 18px rgba(30,30,35,0.28);
+  transform: scale(1.05);
+}
+.unit-pill label:hover { border-color: var(--steel); color: var(--charcoal); transform: scale(1.03); }
+
+/* Divider & buttons */
+.fc-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #d4d4e0 30%, #d4d4e0 70%, transparent);
+  margin: 22px 0;
+}
+
+.fc-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+
+.btn-save {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 15px 28px; border-radius: 999px; border: none;
+  background: linear-gradient(135deg, var(--charcoal), var(--steel));
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(255,255,255,0.07);
+  transition: transform .2s, box-shadow .2s;
+  position: relative; overflow: hidden; min-width: 150px;
+  justify-content: center;
+}
+.btn-save::before {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.12), transparent);
+}
+.btn-save:hover { transform: translateY(-2px); box-shadow: 0 20px 44px rgba(0,0,0,0.44); }
+.btn-save:active { transform: scale(0.97); }
+
+/* loading state */
+.btn-save.loading .btn-text { opacity: 0; }
+.btn-save.loading .btn-spinner { opacity: 1; }
+.btn-save .btn-text { transition: opacity .2s; }
+.btn-save .btn-spinner {
+  position: absolute; opacity: 0;
+  display: flex; align-items: center; gap: 8px;
+  transition: opacity .2s;
+}
+.dot-wave { display: flex; gap: 5px; align-items: center; }
+.dot-wave span {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: rgba(255,255,255,0.85);
+  animation: dotBounce 1s ease-in-out infinite;
+}
+.dot-wave span:nth-child(2) { animation-delay: .16s; }
+.dot-wave span:nth-child(3) { animation-delay: .32s; }
+@keyframes dotBounce {
+  0%,80%,100%{transform:scale(0.7);opacity:.5}
+  40%{transform:scale(1);opacity:1}
+}
+
+.btn-ghost {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 14px 20px; border-radius: 999px;
+  border: 1.5px solid #d4d4e0; background: transparent;
+  color: #7a7a8e;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 600; text-decoration: none;
+  transition: border-color .2s, color .2s;
+}
+.btn-ghost:hover { border-color: var(--steel); color: var(--charcoal); }
+
+/* Progress bar */
+.fc-progress {
+  position: absolute; bottom: 0; left: 0;
+  height: 3px; width: 0%;
+  background: linear-gradient(90deg, var(--steel), var(--silver), var(--mist));
+  border-radius: 0 0 26px 26px;
+  transition: width 2s cubic-bezier(.4,0,.2,1);
+}
+
+/* Tip */
+.fc-tip {
+  margin-top: 18px; padding: 13px 16px;
+  border-radius: 14px; background: #ededf4;
+  border-left: 3px solid var(--steel);
+  font-size: 12.5px; color: #4a4a5e; line-height: 1.7;
+  display: flex; gap: 9px;
+}
+.fc-tip span { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+
+/* ── ANIMATIONS ── */
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 920px) {
+  .ep-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .fg-2 { grid-template-columns: 1fr; }
+  .ep-form-card { padding: 26px 18px; border-radius: 20px; }
+  .ep-left { padding: 24px 18px; border-radius: 20px; }
+  .ep-root { padding: 24px 14px 60px; }
+}
+</style>
+
+<canvas id="particleCanvas"></canvas>
+
+<div class="ep-root">
+  <div class="ep-inner">
+
+    <!-- TOPBAR -->
+    <div class="ep-topbar">
+      <a class="ep-back" href="{% url 'farmer_products' %}">← Back to My Products</a>
+      <div class="ep-badge">✏️ Edit Listing</div>
+    </div>
+
+    <div class="ep-grid">
+
+      <!-- ── LEFT PANEL ── -->
+      <div class="ep-left">
+        <span class="ep-eyebrow">Product Update Panel</span>
+        <h1 class="ep-headline">
+          Edit without<br>making it <em>worse.</em>
+        </h1>
+        <p class="ep-desc">
+          Keep details clear, realistic, and useful. Bad edits reduce trust and hurt conversions.
+        </p>
+
+        <!-- Current product preview -->
+        <div class="ep-preview">
+          <div class="ep-preview-icon">🌾</div>
+          <div class="ep-preview-name">{{ product.name }}</div>
+          <div class="ep-preview-meta">
+            Price: <strong>₹{{ product.price }}</strong> / {{ product.unit }}<br>
+            Stock: <strong>{{ product.stock }}</strong> {{ product.unit }}
+          </div>
+        </div>
+
+        <div class="ep-tips">
+          <div class="ep-tip">
+            <div class="ep-tip-icon">📝</div>
+            <div>
+              <h4>Clear product name</h4>
+              <p>Buyers should understand what they are buying instantly.</p>
+            </div>
+          </div>
+          <div class="ep-tip">
+            <div class="ep-tip-icon">💸</div>
+            <div>
+              <h4>Correct pricing</h4>
+              <p>Wrong price or random numbers destroy buyer confidence fast.</p>
+            </div>
+          </div>
+          <div class="ep-tip">
+            <div class="ep-tip-icon">📦</div>
+            <div>
+              <h4>Update stock accurately</h4>
+              <p>Enter only what is actually available right now.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── RIGHT FORM CARD ── -->
+      <div class="ep-form-card">
+        <div class="fc-leaf">⚙️</div>
+        <div class="fc-progress" id="fcProgress"></div>
+
+        <div class="fc-kicker">Existing Listing</div>
+        <h2 class="fc-title">Edit Product</h2>
+        <p class="fc-sub">Update the product details below carefully.</p>
+
+        <form method="POST" id="editForm">
+          {% csrf_token %}
+
+          <!-- Product name -->
+          <div class="fg">
+            <label>Product Name</label>
+            <small>Use a clear title buyers understand immediately.</small>
+            <div class="fl-wrap">
+              <input class="fi" type="text" name="name" value="{{ product.name }}" placeholder=" " required>
+              <span class="fl-label">Product name</span>
+            </div>
+          </div>
+
+          <!-- Price + Stock -->
+          <div class="fg-2 fg">
+            <div>
+              <label>Price (₹)</label>
+              <small>Keep it realistic</small>
+              <div class="fl-wrap">
+                <input class="fi" type="number" name="price" value="{{ product.price }}" placeholder=" " step="0.01" min="0" required>
+                <span class="fl-label">e.g. 30</span>
+              </div>
+            </div>
+            <div>
+              <label>Stock</label>
+              <small>Available quantity</small>
+              <div class="fl-wrap">
+                <input class="fi" type="number" name="stock" value="{{ product.stock }}" placeholder=" " min="0" required>
+                <span class="fl-label">e.g. 50</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Unit pills -->
+          <div class="fg">
+            <label>Selling Unit</label>
+            <small>Choose the correct unit</small>
+            <div class="unit-pills">
+              <div class="unit-pill">
+                <input type="radio" name="unit" id="u_kg"    value="kg"    {% if product.unit == "kg" %}checked{% endif %}>
+                <label for="u_kg">kg</label>
+              </div>
+              <div class="unit-pill">
+                <input type="radio" name="unit" id="u_dozen" value="dozen" {% if product.unit == "dozen" %}checked{% endif %}>
+                <label for="u_dozen">dozen</label>
+              </div>
+              <div class="unit-pill">
+                <input type="radio" name="unit" id="u_bunch" value="bunch" {% if product.unit == "bunch" %}checked{% endif %}>
+                <label for="u_bunch">bunch</label>
+              </div>
+              <div class="unit-pill">
+                <input type="radio" name="unit" id="u_piece" value="piece" {% if product.unit == "piece" %}checked{% endif %}>
+                <label for="u_piece">piece</label>
+              </div>
+              <div class="unit-pill">
+                <input type="radio" name="unit" id="u_litre" value="litre" {% if product.unit == "litre" %}checked{% endif %}>
+                <label for="u_litre">litre</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="fc-divider"></div>
+
+          <div class="fc-actions">
+            <button class="btn-save" type="submit" id="saveBtn">
+              <span class="btn-text">✓ Save Changes</span>
+              <span class="btn-spinner">
+                <span class="dot-wave"><span></span><span></span><span></span></span>
+              </span>
+            </button>
+            <a class="btn-ghost" href="{% url 'farmer_products' %}">← My Products</a>
+          </div>
+
+          <div class="fc-tip">
+            <span>💡</span>
+            Good product edits build trust. Bad edits — wrong stock, random price — create confusion and reduce clicks.
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+/* Silver pulsing particles */
+(function() {
+  const canvas = document.getElementById('particleCanvas');
+  const ctx    = canvas.getContext('2d');
+  let W, H, particles = [];
+  const COUNT = 30;
+
+  function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+  function rand(a,b) { return a + Math.random()*(b-a); }
+
+  function spawn() {
+    return {
+      x: rand(0,W), y: rand(-40,H+40),
+      r: rand(1,3.5),
+      vx: rand(-0.18,0.18), vy: rand(-0.45,-0.12),
+      alpha: rand(0.06,0.28),
+      pulse: rand(0,Math.PI*2), pv: rand(0.012,0.025)
+    };
+  }
+
+  function init() {
+    resize();
+    particles = Array.from({length:COUNT}, spawn);
+    particles.forEach(p => { p.y = rand(0,H); });
+  }
+
+  function draw() {
+    ctx.clearRect(0,0,W,H);
+    particles.forEach(p => {
+      p.pulse += p.pv;
+      const a = p.alpha * (0.65 + 0.35*Math.sin(p.pulse));
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(180,180,200,${a})`; ctx.fill();
+      p.x += p.vx; p.y += p.vy;
+      if (p.y < -20) { Object.assign(p,spawn()); p.y = H+10; }
+      if (p.x < -10)  p.x = W+10;
+      if (p.x > W+10) p.x = -10;
+    });
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize);
+  init(); draw();
+})();
+
+/* Submit loading animation */
+(function() {
+  const form     = document.getElementById('editForm');
+  const btn      = document.getElementById('saveBtn');
+  const progress = document.getElementById('fcProgress');
+
+  form.addEventListener('submit', function() {
+    if (!form.checkValidity()) return;
+    btn.classList.add('loading');
+    btn.disabled = true;
+    requestAnimationFrame(() => { progress.style.width = '100%'; });
+    setTimeout(() => {
+      btn.classList.remove('loading');
+      const txt = btn.querySelector('.btn-text');
+      if (txt) txt.textContent = '✓ Saved!';
+    }, 1800);
+  });
+})();
+</script>
+
+{% endblock %}

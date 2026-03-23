@@ -1,0 +1,832 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  
+  --void:   rgb(48, 112, 114);
+  --charcoal:#02181b;
+  --iron:    #eaea29;
+  --steel:   #d27c14;
+  --silver:  #14a0c0;
+  --mist:    #c8c8d8;
+  --snow:    #eeeef4;
+  --glass: #14a0c0  ;
+  --border:  #14a0c0;
+}
+
+body { background: var(--void); }
+
+.ap-root {
+  min-height: 100vh;
+  background: var(--void);
+  background-image:
+    radial-gradient(ellipse 70% 55% at 15% 8%,  rgba(160,160,180,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 70% at 88% 92%,  rgba(100,100,130,0.06) 0%, transparent 55%),
+    url("data:image/svg+xml,%3Csvg width='64' height='64' viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.012'%3E%3Cpath d='M8 16c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8zm0-2c3.314 0 6-2.686 6-6s-2.686-6-6-6-6 2.686-6 6 2.686 6 6 6z'/%3E%3C/g%3E%3C/svg%3E");
+  font-family: 'DM Sans', sans-serif;
+  padding: 40px 20px 80px;
+  position: relative;
+  overflow-x: hidden;
+}
+
+
+#particleCanvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ap-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.ap-topbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 44px;
+  opacity: 0;
+  animation: riseIn 0.7s cubic-bezier(.22,.68,0,1.2) 0.1s forwards;
+}
+
+.ap-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.09);
+  color: var(--mist);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: border-color .25s, background .25s;
+}
+.ap-back:hover { border-color: var(--silver); background: rgba(160,160,180,0.08); }
+
+.ap-badge {
+  margin-left: auto;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(200,200,216,0.18);
+  background: rgba(200,200,216,0.06);
+  color: var(--mist);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.ap-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 28px;
+  align-items: start;
+}
+
+
+.ap-left {
+  opacity: 0;
+  animation: riseIn 0.8s cubic-bezier(.22,.68,0,1.2) 0.22s forwards;
+}
+
+.ap-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--silver);
+  display: block;
+  margin-bottom: 18px;
+}
+
+.ap-headline {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(40px, 4.5vw, 60px);
+  font-weight: 900;
+  color: var(--snow);
+  line-height: 1.06;
+  margin-bottom: 18px;
+}
+.ap-headline em {
+  font-style: italic;
+  background: linear-gradient(135deg, var(--mist), var(--silver));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.ap-desc {
+  font-size: 15px;
+  line-height: 1.9;
+  color: rgba(200,200,216,0.50);
+  max-width: 340px;
+  margin-bottom: 40px;
+}
+
+
+.ap-cards { display: grid; gap: 11px; }
+
+.ap-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 18px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.05);
+  background: var(--glass);
+  backdrop-filter: blur(10px);
+  transition: border-color .3s, transform .3s, background .3s;
+  cursor: default;
+}
+.ap-card:hover {
+  border-color: rgba(160,160,180,0.20);
+  background: rgba(160,160,180,0.05);
+  transform: translateX(7px);
+}
+
+.ap-card-icon {
+  width: 42px; height: 42px;
+  border-radius: 13px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 19px; flex-shrink: 0;
+  background: rgba(160,160,180,0.10);
+  border: 1px solid rgba(160,160,180,0.14);
+}
+
+.ap-card h4 { font-size: 14px; font-weight: 600; color: var(--snow); margin-bottom: 4px; }
+.ap-card p  { font-size: 12.5px; color: rgba(200,200,216,0.46); line-height: 1.6; }
+
+
+.ap-stats {
+  display: flex;
+  gap: 28px;
+  margin-top: 40px;
+  padding-top: 28px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+.ap-stat-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px; font-weight: 700;
+  color: var(--mist);
+}
+.ap-stat-lbl {
+  font-size: 11.5px;
+  color: rgba(200,200,216,0.36);
+  margin-top: 3px;
+  line-height: 1.5;
+}
+
+
+.ap-form-card {
+  background: #f2f2f5;
+  border-radius: 28px;
+  padding: 38px 34px;
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 48px 96px rgba(0,0,0,0.60),
+    0 0 0 1px rgba(255,255,255,0.05);
+  opacity: 0;
+  transform: translateY(36px) scale(0.97);
+  animation: cardEntrance 0.9s cubic-bezier(.22,.68,0,1.1) 0.38s forwards;
+}
+
+@keyframes cardEntrance {
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+
+.ap-form-card::after {
+  content: "";
+  position: absolute;
+  top: 0; left: -100%;
+  width: 60%; height: 100%;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.18) 50%, transparent 60%);
+  animation: shimmerSweep 1.1s 0.85s forwards;
+  pointer-events: none;
+}
+@keyframes shimmerSweep { to { left: 160%; } }
+
+.fc-leaf {
+  position: absolute;
+  top: 14px; right: 18px;
+  font-size: 60px;
+  opacity: 0.06;
+  transform: rotate(15deg);
+  pointer-events: none;
+}
+
+.fc-progress {
+  position: absolute;
+  bottom: 0; left: 0;
+  height: 3px;
+  width: 0%;
+  background: linear-gradient(90deg, var(--steel), var(--silver), var(--mist));
+  border-radius: 0 0 28px 28px;
+  transition: width 2.2s cubic-bezier(.4,0,.2,1);
+}
+
+.fc-kicker {
+  display: inline-block;
+  padding: 6px 13px;
+  border-radius: 999px;
+  background: #e0e0ea;
+  color: #3c3c50;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.fc-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 30px; font-weight: 900;
+  color: #18181f;
+  margin-bottom: 6px;
+}
+
+.fc-sub { font-size: 13.5px; color: #7a7a8e; margin-bottom: 28px; line-height: 1.7; }
+
+
+.fg { margin-bottom: 18px; position: relative; }
+.fg-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+.fg > label, .fg-inner > label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #3a3a4a;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 7px;
+}
+
+.fg small {
+  display: block;
+  font-size: 11.5px;
+  color: #8a8a9e;
+  margin-top: -3px;
+  margin-bottom: 7px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+
+.fl-wrap { position: relative; }
+.fl-wrap .fi { padding-top: 22px; padding-bottom: 10px; }
+.fl-wrap .fl-label {
+  position: absolute;
+  left: 16px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 13.5px;
+  color: #8a8a9e;
+  font-weight: 500;
+  pointer-events: none;
+  transition: all 0.22s cubic-bezier(.4,0,.2,1);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.fl-wrap .fi:focus ~ .fl-label,
+.fl-wrap .fi:not(:placeholder-shown) ~ .fl-label {
+  top: 12px;
+  transform: none;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--iron);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+
+.fi {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1.5px solid #d8d8e4;
+  background: #fafafc;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: #18181f;
+  outline: none;
+  transition: border-color .22s, box-shadow .22s, background .22s, transform .15s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.fi::placeholder { color: transparent; }
+.fi:focus {
+  border-color: var(--steel);
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(60,60,71,0.10), 0 4px 20px rgba(60,60,71,0.08);
+  transform: translateY(-1px);
+}
+
+select.fi {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%233c3c47' stroke-width='1.7' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 38px;
+  cursor: pointer;
+}
+select.fi::placeholder { color: #8a8a9e; }
+
+
+.unit-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
+
+.unit-pill input[type="radio"] { display: none; }
+.unit-pill label {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1.5px solid #d4d4e0;
+  background: #fafafc;
+  color: #6a6a7e;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s cubic-bezier(.34,1.56,.64,1);
+  user-select: none;
+}
+.unit-pill input:checked + label {
+  background: var(--charcoal);
+  border-color: var(--charcoal);
+  color: #fff;
+  box-shadow: 0 4px 18px rgba(30,30,35,0.30);
+  transform: scale(1.05);
+}
+.unit-pill label:hover { border-color: var(--steel); color: var(--charcoal); transform: scale(1.03); }
+
+
+.img-upload-zone {
+  border: 2px dashed #ccccd8;
+  border-radius: 18px;
+  background: #fafafc;
+  cursor: pointer;
+  transition: border-color .25s, background .25s, box-shadow .25s;
+  position: relative;
+  overflow: hidden;
+}
+.img-upload-zone:hover {
+  border-color: var(--steel);
+  background: #f4f4f8;
+  box-shadow: 0 0 0 4px rgba(60,60,71,0.07);
+}
+.img-upload-zone.drag-over {
+  border-color: var(--silver);
+  background: #efeff4;
+  box-shadow: 0 0 0 6px rgba(160,160,180,0.12);
+}
+
+.img-upload-zone input[type="file"] {
+  position: absolute; inset: 0;
+  opacity: 0; cursor: pointer;
+  width: 100%; height: 100%;
+}
+
+.img-placeholder {
+  padding: 32px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  transition: opacity .25s;
+}
+
+.img-placeholder-icon {
+  width: 56px; height: 56px;
+  border-radius: 16px;
+  background: rgba(60,60,71,0.08);
+  border: 1px solid rgba(60,60,71,0.12);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px;
+  transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+}
+.img-upload-zone:hover .img-placeholder-icon { transform: scale(1.12) rotate(-4deg); }
+
+.img-placeholder p { font-size: 13.5px; font-weight: 600; color: #3a3a4a; margin: 0; }
+.img-placeholder span { font-size: 12px; color: #8a8a9e; }
+
+.img-preview-box { display: none; position: relative; }
+.img-preview-box img { width: 100%; max-height: 200px; object-fit: cover; display: block; }
+.img-preview-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.60) 0%, transparent 50%);
+  display: flex; align-items: flex-end;
+  padding: 14px 16px;
+}
+.img-preview-name { color: #fff; font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+.img-remove-btn {
+  margin-left: auto;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.28);
+  color: #fff; font-size: 11px; font-weight: 700;
+  cursor: pointer; backdrop-filter: blur(6px);
+  transition: background .2s;
+}
+.img-remove-btn:hover { background: rgba(200,50,50,0.55); }
+
+
+.fc-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #d4d4e0 30%, #d4d4e0 70%, transparent);
+  margin: 24px 0;
+}
+
+.fc-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+
+.btn-submit {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 30px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, var(--charcoal) 0%, var(--iron) 50%, var(--steel) 100%);
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 700;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.38), 0 0 0 1px rgba(255,255,255,0.06) inset;
+  transition: transform .2s, box-shadow .2s;
+  min-width: 160px;
+  justify-content: center;
+}
+.btn-submit::before {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.12), transparent);
+  border-radius: inherit;
+}
+.btn-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 48px rgba(0,0,0,0.48), 0 0 0 1px rgba(255,255,255,0.08) inset;
+}
+.btn-submit:active { transform: scale(0.97); }
+
+.btn-submit.loading .btn-text { opacity: 0; }
+.btn-submit.loading .btn-spinner { opacity: 1; }
+.btn-submit .btn-text { transition: opacity .2s; }
+.btn-submit .btn-spinner {
+  position: absolute; opacity: 0;
+  display: flex; align-items: center; gap: 8px;
+  transition: opacity .2s;
+}
+
+.dot-wave { display: flex; gap: 5px; align-items: center; }
+.dot-wave span {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: rgba(255,255,255,0.85);
+  animation: dotBounce 1s ease-in-out infinite;
+}
+.dot-wave span:nth-child(2) { animation-delay: .16s; }
+.dot-wave span:nth-child(3) { animation-delay: .32s; }
+@keyframes dotBounce {
+  0%, 80%, 100% { transform: scale(0.7); opacity: 0.5; }
+  40%           { transform: scale(1);   opacity: 1;   }
+}
+
+.btn-submit.success { background: linear-gradient(135deg, #2a2a35, #3a3a48); }
+
+.btn-ghost-dark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 20px;
+  border-radius: 999px;
+  border: 1.5px solid #ccccd8;
+  background: transparent;
+  color: #7a7a8e;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 600;
+  text-decoration: none;
+  transition: border-color .2s, color .2s;
+}
+.btn-ghost-dark:hover { border-color: var(--steel); color: var(--charcoal); }
+
+.fc-tip {
+  margin-top: 18px;
+  padding: 13px 16px;
+  border-radius: 14px;
+  background: #ededf4;
+  border-left: 3px solid var(--steel);
+  font-size: 12.5px;
+  color: #4a4a5e;
+  line-height: 1.7;
+  display: flex; gap: 9px;
+}
+.fc-tip span { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 920px) {
+  .ap-grid { grid-template-columns: 1fr; }
+  .ap-left { order: 2; }
+  .ap-form-card { order: 1; }
+}
+@media (max-width: 560px) {
+  .fg-2 { grid-template-columns: 1fr; }
+  .ap-form-card { padding: 26px 18px; border-radius: 22px; }
+  .fc-title { font-size: 24px; }
+  .ap-headline { font-size: 38px; }
+  .ap-root { padding: 24px 14px 60px; }
+}
+</style>
+
+<canvas id="particleCanvas"></canvas>
+
+<div class="ap-root">
+  <div class="ap-inner">
+
+    <div class="ap-topbar">
+      <a class="ap-back" href="{% url 'farmer_products' %}"> Back to Products</a>
+      <div class="ap-badge"> Farmer Portal</div>
+    </div>
+
+    <div class="ap-grid">
+
+      
+      <div class="ap-left">
+        <span class="ap-eyebrow">New Listing</span>
+        <h1 class="ap-headline">
+          Listings that<br><em>actually</em><br>sell.
+        </h1>
+        <p class="ap-desc">
+          Clear product names, fair pricing, and accurate stock count that's all it takes to turn a listing into real orders.
+        </p>
+
+        <div class="ap-cards">
+          <div class="ap-card">
+            
+            <div>
+              <h4>Clear product title</h4>
+              <p>Be specific"Organic Cherry Tomatoes" always wins over just "Tomatoes".</p>
+            </div>
+          </div>
+          <div class="ap-card">
+            
+            <div>
+              <h4>Price with purpose</h4>
+              <p>Know your cost, know your market. Fair pricing moves stock fast.</p>
+            </div>
+          </div>
+          <div class="ap-card">
+            
+            <div>
+              <h4>Stock honesty matters</h4>
+              <p>Enter only what you can ship today. Overselling kills trust.</p>
+            </div>
+          </div>
+          <div class="ap-card">
+            
+            <div>
+              <h4>Add a product photo</h4>
+              <p>Listings with images get significantly more clicks and enquiries.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="ap-stats">
+          <div>
+            <div class="ap-stat-num">2.4</div>
+            <div class="ap-stat-lbl">orders with<br>clear names</div>
+          </div>
+          <div>
+            <div class="ap-stat-num"><i class="fa-light fa-indian-rupee-sign"></i>0</div>
+            <div class="ap-stat-lbl">listing fee,<br>ever</div>
+          </div>
+          <div>
+            <div class="ap-stat-num">24h</div>
+            <div class="ap-stat-lbl">live after<br>submit</div>
+          </div>
+        </div>
+      </div>
+
+      
+      <div class="ap-form-card" id="formCard">
+        <div class="fc-leaf"><i class="fa-regular fa-fan"></i></div>
+        <div class="fc-progress" id="fcProgress"></div>
+
+        <div class="fc-kicker">Add Product</div>
+        <h2 class="fc-title">New Product Details</h2>
+        <p class="fc-sub">Fill carefully this is exactly what buyers see.</p>
+
+        <form method="POST" enctype="multipart/form-data" id="productForm">
+          {% csrf_token %}
+
+          <div class="fg">
+            <label>Product Name</label>
+            <small>e.g. "Fresh Organic Tomatoes (500g)"</small>
+            <div class="fl-wrap">
+              <input class="fi" type="text" name="name" id="fieldName" placeholder=" " required>
+              <span class="fl-label">Enter product name</span>
+            </div>
+          </div>
+
+          <div class="fg-2 fg">
+            <div>
+              <label>Price (<i class="fa-solid fa-indian-rupee-sign"></i>)</label>
+              <small>Per unit below</small>
+              <div class="fl-wrap">
+                <input class="fi" type="number" name="price" id="fieldPrice" placeholder=" " step="0.01" min="0" required>
+                <span class="fl-label">e.g. 30</span>
+              </div>
+            </div>
+            <div>
+              <label>Stock</label>
+              <small>Available quantity</small>
+              <div class="fl-wrap">
+                <input class="fi" type="number" name="stock" id="fieldStock" placeholder=" " min="0" required>
+                <span class="fl-label">e.g. 50</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="fg">
+            <label>Selling Unit</label>
+            <small>How is this product sold?</small>
+            <div class="unit-pills">
+              <div class="unit-pill"><input type="radio" name="unit" id="u_kg"    value="kg"    checked><label for="u_kg">kg</label></div>
+              <div class="unit-pill"><input type="radio" name="unit" id="u_dozen" value="dozen"       ><label for="u_dozen">dozen</label></div>
+              <div class="unit-pill"><input type="radio" name="unit" id="u_bunch" value="bunch"       ><label for="u_bunch">bunch</label></div>
+              <div class="unit-pill"><input type="radio" name="unit" id="u_piece" value="piece"       ><label for="u_piece">piece</label></div>
+              <div class="unit-pill"><input type="radio" name="unit" id="u_litre" value="litre"       ><label for="u_litre">litre</label></div>
+            </div>
+          </div>
+
+          <div class="fg">
+            <label>Product Photo</label>
+            <small>JPG, PNG or WEBP-max 5MB. Highly recommended!</small>
+            <div class="img-upload-zone" id="uploadZone">
+              <input type="file" name="image" id="imgInput" accept="image/*">
+              <div class="img-placeholder" id="imgPlaceholder">
+                <div class="img-placeholder-icon"><i class="fa-solid fa-camera-retro"></i></div>
+                <p>Click or drag photo here</p>
+                <span>JPG . PNG . WEBP up to 5 MB</span>
+              </div>
+              <div class="img-preview-box" id="imgPreviewBox">
+                <img id="imgPreviewEl" src="" alt="Preview">
+                <div class="img-preview-overlay">
+                  <span class="img-preview-name" id="imgPreviewName"></span>
+                  <button type="button" class="img-remove-btn" id="imgRemoveBtn"> Remove</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="fc-divider"></div>
+
+          <div class="fc-actions">
+            <button class="btn-submit" type="submit" id="submitBtn">
+              <span class="btn-text">+ Add Product</span>
+              <span class="btn-spinner">
+                <span class="dot-wave"><span></span><span></span><span></span></span>
+              </span>
+            </button>
+            <a class="btn-ghost-dark" href="{% url 'farmer_products' %}"> My Products</a>
+          </div>
+
+          <div class="fc-tip">
+            <span><i class="fa-regular fa-lightbulb"></i></span>
+            Products with photos and clear titles get 2x more buyer enquiries on average.
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+
+(function() {
+  const canvas = document.getElementById('particleCanvas');
+  const ctx    = canvas.getContext('2d');
+  let W, H, particles = [];
+  const COUNT = 30;
+
+  function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+  function rand(a,b) { return a + Math.random()*(b-a); }
+
+
+  function spawn() {
+    return {
+      x:    rand(0, W),
+      y:    rand(-40, H+40),
+      r:    rand(1, 3.5),
+      vx:   rand(-0.18, 0.18),
+      vy:   rand(-0.45, -0.12),
+      alpha: rand(0.06, 0.28),
+      pulse: rand(0, Math.PI*2),
+      pv:   rand(0.012, 0.025)
+    };
+  }
+
+  function init() {
+    resize();
+    particles = Array.from({length: COUNT}, spawn);
+    particles.forEach(p => { p.y = rand(0, H); });
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => {
+      p.pulse += p.pv;
+      const a = p.alpha * (0.65 + 0.35 * Math.sin(p.pulse));
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(180,180,200,${a})`;
+      ctx.fill();
+
+      p.x += p.vx; p.y += p.vy;
+      if (p.y < -20) { Object.assign(p, spawn()); p.y = H+10; }
+      if (p.x < -10)  p.x = W+10;
+      if (p.x > W+10) p.x = -10;
+    });
+
+    
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize);
+  init(); draw();
+})();
+
+
+(function() {
+  const zone        = document.getElementById('uploadZone');
+  const input       = document.getElementById('imgInput');
+  const placeholder = document.getElementById('imgPlaceholder');
+  const previewBox  = document.getElementById('imgPreviewBox');
+  const previewImg  = document.getElementById('imgPreviewEl');
+  const previewName = document.getElementById('imgPreviewName');
+  const removeBtn   = document.getElementById('imgRemoveBtn');
+
+  function showPreview(file) {
+    if (!file || !file.type.startsWith('image/')) return;
+    previewImg.src = URL.createObjectURL(file);
+    previewName.textContent = file.name;
+    placeholder.style.display = 'none';
+    previewBox.style.display  = 'block';
+  }
+  function clearPreview() {
+    previewImg.src = '';
+    placeholder.style.display = '';
+    previewBox.style.display  = 'none';
+    input.value = '';
+  }
+
+  input.addEventListener('change', () => { if(input.files[0]) showPreview(input.files[0]); });
+  removeBtn.addEventListener('click', e => { e.stopPropagation(); clearPreview(); });
+
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      const dt = new DataTransfer(); dt.items.add(file); input.files = dt.files;
+      showPreview(file);
+    }
+  });
+})();
+
+
+(function() {
+  const form     = document.getElementById('productForm');
+  const btn      = document.getElementById('submitBtn');
+  const progress = document.getElementById('fcProgress');
+
+  form.addEventListener('submit', function() {
+    if (!form.checkValidity()) return;
+    btn.classList.add('loading');
+    btn.disabled = true;
+    requestAnimationFrame(() => { progress.style.width = '100%'; });
+    setTimeout(() => {
+      btn.classList.remove('loading');
+      btn.classList.add('success');
+      const txt = btn.querySelector('.btn-text');
+      if (txt) txt.textContent = '✓  Product Added!';
+    }, 2200);
+  });
+})();
+</script>
+
+{% endblock %}

@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% block title %}Customer Support-FarmDirect{% endblock %}
+{% block content %}
+<div class="container">
+
+  <div class="page-header" style="background:none;border:none;padding:28px 0 20px;">
+    <div class="page-title">
+      <span class="title-icon"><i class="fa-solid fa-headset"></i></span>
+      Customer Support
+    </div>
+  </div>
+
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:32px;">
+
+    <div style="background:white;border:1px solid #dbeafe;border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:all .2s;" onclick="selectCategory('order')">
+      <div style="width:48px;height:48px;background:#dbeafe;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:1.3rem;color:#2563eb;"><i class="fa-solid fa-receipt"></i></div>
+      <div style="font-weight:700;font-size:.9rem;color:var(--gray-800);margin-bottom:4px;">Order Issues</div>
+      <div style="font-size:.75rem;color:var(--gray-500);">Problems with orders & tracking</div>
+    </div>
+    <div style="background:white;border:1px solid #fef3c7;border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:all .2s;" onclick="selectCategory('payment')">
+      <div style="width:48px;height:48px;background:#fef3c7;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:1.3rem;color:#d97706;"><i class="fa-solid fa-credit-card"></i></div>
+      <div style="font-weight:700;font-size:.9rem;color:var(--gray-800);margin-bottom:4px;">Payment Help</div>
+      <div style="font-size:.75rem;color:var(--gray-500);">Failures, refunds & billing</div>
+    </div>
+    <div style="background:white;border:1px solid #dcfce7;border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:all .2s;" onclick="selectCategory('delivery')">
+      <div style="width:48px;height:48px;background:#dcfce7;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:1.3rem;color:#16a34a;"><i class="fa-solid fa-truck"></i></div>
+      <div style="font-weight:700;font-size:.9rem;color:var(--gray-800);margin-bottom:4px;">Delivery Support</div>
+      <div style="font-size:.75rem;color:var(--gray-500);">Delays or missing packages</div>
+    </div>
+    <div style="background:white;border:1px solid #ede9fe;border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:all .2s;" onclick="selectCategory('product')">
+      <div style="width:48px;height:48px;background:#ede9fe;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:1.3rem;color:#7c3aed;"><i class="fa-solid fa-box-open"></i></div>
+      <div style="font-weight:700;font-size:.9rem;color:var(--gray-800);margin-bottom:4px;">Product Quality</div>
+      <div style="font-size:.75rem;color:var(--gray-500);">Quality complaints & returns</div>
+    </div>
+    <div style="background:white;border:1px solid var(--gray-200);border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:all .2s;" onclick="selectCategory('account')">
+      <div style="width:48px;height:48px;background:var(--gray-100);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:1.3rem;color:var(--gray-500);"><i class="fa-solid fa-user-gear"></i></div>
+      <div style="font-weight:700;font-size:.9rem;color:var(--gray-800);margin-bottom:4px;">Account Help</div>
+      <div style="font-size:.75rem;color:var(--gray-500);">Login issues & settings</div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 380px;gap:28px;align-items:start;">
+
+ 
+    <div>
+      <div class="card" style="margin-bottom:24px;">
+        <div class="card-header">
+          <div class="card-title"><i class="fa-solid fa-paper-plane" style="color:var(--green)"></i> Submit a Support Ticket</div>
+        </div>
+        <div class="card-body">
+          <form method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+              <label>Category</label>
+              <select name="category" id="category-select" class="form-control">
+                <option value="order">Order Issue</option>
+                <option value="payment">Payment Problem</option>
+                <option value="product">Product Quality</option>
+                <option value="delivery">Delivery Issue</option>
+                <option value="account">Account Problem</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Subject</label>
+              <input type="text" name="subject" class="form-control"
+                     placeholder="Briefly describe your issue…" required maxlength="200">
+            </div>
+            <div class="form-group">
+              <label>Message</label>
+              <textarea name="message" class="form-control" rows="6"
+                        placeholder="Please describe your issue in detail. Include order numbers, dates, or any relevant information…" required></textarea>
+            </div>
+
+            <div style="background:var(--green-light);border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:.82rem;color:var(--green-dark);display:flex;gap:10px;align-items:flex-start;">
+              <i class="fa-solid fa-clock" style="margin-top:2px;"></i>
+              <div>Our support team typically responds within <strong>24 hours</strong>. For urgent issues, call us at <strong>1800-FARM-123</strong>.</div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width:100%;">
+              <i class="fa-solid fa-paper-plane"></i> Submit Ticket
+            </button>
+          </form>
+        </div>
+      </div>
+
+    
+      {% if tickets %}
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="fa-solid fa-clock-rotate-left" style="color:var(--green)"></i> My Support Tickets</div>
+          <span class="badge badge-blue">{{ tickets.count }} ticket{{ tickets.count|pluralize }}</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Subject</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for t in tickets %}
+              <tr>
+                <td style="font-weight:600;color:var(--gray-500);font-size:.8rem;">#{{ t.id }}</td>
+                <td>
+                  <div style="font-weight:600;color:var(--gray-800);font-size:.88rem;">{{ t.subject }}</div>
+                  <div style="font-size:.75rem;color:var(--gray-400);margin-top:2px;">{{ t.message|truncatechars:60 }}</div>
+                </td>
+                <td><span class="badge badge-gray">{{ t.get_category_display }}</span></td>
+                <td>
+                  {% if t.status == 'open' %}<span class="badge badge-blue">Open</span>
+                  {% elif t.status == 'in_progress' %}<span class="badge badge-amber">In Progress</span>
+                  {% elif t.status == 'resolved' %}<span class="badge badge-green">Resolved</span>
+                  {% else %}<span class="badge badge-gray">Closed</span>{% endif %}
+                </td>
+                <td style="font-size:.8rem;color:var(--gray-500);">{{ t.created_at|date:"d M Y" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    
+    <div style="display:flex;flex-direction:column;gap:20px;">
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="fa-solid fa-circle-question" style="color:var(--green)"></i> Quick FAQs</div>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-q"><span>How do I track my order?</span><i class="fa-solid fa-chevron-down"></i></div>
+            <div class="faq-a">Go to My Orders and click on any order to see real-time status updates.</div>
+          </div>
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-q"><span>Can I cancel my order?</span><i class="fa-solid fa-chevron-down"></i></div>
+            <div class="faq-a">Orders can be cancelled before they are confirmed by the farmer. Contact support if needed.</div>
+          </div>
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-q"><span>How are refunds processed?</span><i class="fa-solid fa-chevron-down"></i></div>
+            <div class="faq-a">Refunds are processed within 5–7 business days to your original payment method.</div>
+          </div>
+          <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-q"><span>How do I become a verified farmer?</span><i class="fa-solid fa-chevron-down"></i></div>
+            <div class="faq-a">Register as a farmer and our team will verify your details within 48 hours.</div>
+          </div>
+          <div class="faq-item" onclick="toggleFaq(this)" style="border-bottom:none;">
+            <div class="faq-q"><span>What if I receive damaged produce?</span><i class="fa-solid fa-chevron-down"></i></div>
+            <div class="faq-a">Submit a support ticket with photos and we will arrange a replacement or full refund.</div>
+          </div>
+        </div>
+      </div>
+
+     
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="fa-solid fa-phone" style="color:var(--green)"></i> Contact Us</div>
+        </div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div style="width:40px;height:40px;background:var(--green-light);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--green);flex-shrink:0;"><i class="fa-solid fa-phone"></i></div>
+            <div>
+              <div style="font-size:.7rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--gray-400);">Helpline</div>
+              <div style="font-weight:700;color:var(--gray-800);">1800-FARM-123</div>
+              <div style="font-size:.75rem;color:var(--gray-500);">Mon-Sat, 9 AM-6 PM</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div style="width:40px;height:40px;background:#dbeafe;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#2563eb;flex-shrink:0;"><i class="fa-solid fa-envelope"></i></div>
+            <div>
+              <div style="font-size:.7rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--gray-400);">Email</div>
+              <div style="font-weight:700;color:var(--gray-800);">harishbabuyarraguntla@gmail.com</div>
+              <div style="font-size:.75rem;color:var(--gray-500);">Response within 24 hours</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div style="width:40px;height:40px;background:#fef3c7;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#d97706;flex-shrink:0;"><i class="fa-brands fa-whatsapp"></i></div>
+            <div>
+              <div style="font-size:.7rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--gray-400);">WhatsApp</div>
+              <div style="font-weight:700;color:var(--gray-800);">+91 8088886368</div>
+              <div style="font-size:.75rem;color:var(--gray-500);">Quick replies via WhatsApp</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<style>
+.faq-item {
+  border-bottom:1px solid var(--gray-100);
+  cursor:pointer;
+  transition:background .15s;
+}
+.faq-item:hover { background:var(--gray-50); }
+.faq-q {
+  display:flex;justify-content:space-between;align-items:center;
+  padding:14px 20px;
+  font-size:.86rem;font-weight:600;color:var(--gray-700);
+}
+.faq-q i { color:var(--gray-400);font-size:.8rem;transition:transform .2s; }
+.faq-a {
+  display:none;
+  padding:0 20px 14px;
+  font-size:.82rem;color:var(--gray-500);line-height:1.7;
+}
+.faq-item.open .faq-a { display:block; }
+.faq-item.open .faq-q i { transform:rotate(180deg); }
+</style>
+
+<script>
+function toggleFaq(el) { el.classList.toggle('open'); }
+function selectCategory(cat) {
+  document.getElementById('category-select').value = cat;
+  document.querySelector('[name="subject"]').focus();
+}
+</script>
+{% endblock %}

@@ -1,0 +1,657 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #051834;
+  --surface:   #2a3552;
+  --lift:      #191d25;
+  --raise:     #232834;
+  --border:    rgba(255,255,255,0.055);
+  --border-hi: rgba(224, 7, 7, 0.1);
+
+  --gold:      #c9a84c;
+  --gold-lt:   #e8c878;
+  --gold-dim:  rgba(201,168,76,0.10);
+  --gold-glow: rgba(201,168,76,0.18);
+
+  --teal:      #2bb5a0;
+  --teal-lt:   #5dd6c4;
+  --teal-dim:  rgba(43,181,160,0.10);
+
+  --violet:    #9b7de8;
+  --violet-lt: #c5adf5;
+  --violet-dim:rgba(155,125,232,0.10);
+
+  --text:      #f0ede6;
+  --text-muted:rgba(240,237,230,0.52);
+  --text-dim:  rgba(240,237,230,0.28);
+}
+
+body {
+  background: var(white);
+  font-family: 'Outfit', sans-serif;
+  color: var(--text);
+}
+
+#particleCanvas {
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 0;
+}
+
+.customer-dashboard {
+  position: relative; z-index: 1;
+  max-width: 1180px;
+  margin: 8px auto 60px;
+  padding: 0 20px;
+  background:
+    radial-gradient(ellipse 55% 45% at 10% 5%,  rgba(201,168,76,0.05) 0%, transparent 55%),
+    radial-gradient(ellipse 45% 55% at 90% 95%, rgba(43,181,160,0.04) 0%, transparent 55%);
+}
+
+
+.dashboard-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 28px;
+  padding: 40px 40px;
+  margin-bottom: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: 1.35fr 0.75fr;
+  gap: 28px;
+  align-items: center;
+  box-shadow: 0 32px 64px rgba(0,0,0,0.55);
+}
+
+
+.dashboard-hero::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent 5%, var(--gold) 30%, var(--teal) 70%, transparent 95%);
+  opacity: 0.55;
+}
+
+.dashboard-hero::after {
+  content: "";
+  position: absolute;
+  width: 340px; height: 340px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,168,76,0.07), transparent 70%);
+  top: -100px; right: -80px;
+  pointer-events: none;
+}
+
+.hero-orb2 {
+  position: absolute;
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(43,181,160,0.05), transparent 70%);
+  bottom: -60px; left: -40px;
+  pointer-events: none;
+}
+
+.hero-content,
+.hero-side {
+  position: relative; z-index: 1;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 15px;
+  border-radius: 999px;
+  background: var(--gold-dim);
+  border: 1px solid rgba(201,168,76,0.22);
+  color: var(--gold-lt);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.hero-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+.hero-title span {
+  font-style: italic;
+  background: linear-gradient(135deg, var(--gold-lt), var(--gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-text {
+  font-size: 0.95rem;
+  line-height: 1.85;
+  color: var(--text-muted);
+  margin-bottom: 26px;
+  max-width: 540px;
+  font-weight: 300;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn-gold {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 24px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--gold), #b8903c);
+  color: #0a0c0f;
+  font-size: 0.87rem; font-weight: 700;
+  text-decoration: none;
+  transition: transform .2s, filter .2s, box-shadow .2s;
+  box-shadow: 0 8px 24px rgba(201,168,76,0.28);
+}
+.btn-gold:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+  box-shadow: 0 14px 32px rgba(201,168,76,0.38);
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 22px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border-hi);
+  color: var(--text-muted);
+  font-size: 0.87rem; font-weight: 500;
+  text-decoration: none;
+  transition: background .2s, color .2s, border-color .2s;
+}
+.btn-ghost:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.18);
+  color: var(--text);
+}
+
+
+.hero-side {
+  display: grid;
+  gap: 14px;
+}
+
+.hero-mini-card {
+  background: var(--lift);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 18px 20px;
+  position: relative; overflow: hidden;
+  transition: border-color .25s;
+}
+.hero-mini-card:hover { border-color: rgba(201,168,76,0.20); }
+.hero-mini-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0.35;
+}
+
+.hero-mini-label {
+  font-size: 0.72rem; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+.hero-mini-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.35rem; font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.hero-mini-sub {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  font-weight: 400;
+}
+
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.dash-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 28px 24px;
+  position: relative; overflow: hidden;
+  transition: transform .25s, border-color .25s, box-shadow .25s;
+  opacity: 0;
+  animation: riseIn .75s cubic-bezier(.22,.68,0,1.2) forwards;
+}
+.dash-card:nth-child(1) { animation-delay: .1s; }
+.dash-card:nth-child(2) { animation-delay: .18s; }
+.dash-card:nth-child(3) { animation-delay: .26s; }
+
+.dash-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(201,168,76,0.18);
+  box-shadow: 0 24px 52px rgba(0,0,0,0.55);
+}
+
+.dash-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+}
+.dash-card.c1::before { background: linear-gradient(90deg, var(--teal), var(--teal-lt)); }
+.dash-card.c2::before { background: linear-gradient(90deg, var(--gold), var(--gold-lt)); }
+.dash-card.c3::before { background: linear-gradient(90deg, var(--violet), var(--violet-lt)); }
+
+.dash-orb {
+  position: absolute;
+  width: 110px; height: 110px; border-radius: 50%;
+  top: -30px; right: -25px; opacity: 0.06;
+}
+.c1 .dash-orb { background: var(--teal); }
+.c2 .dash-orb { background: var(--gold); }
+.c3 .dash-orb { background: var(--violet); }
+
+.dash-icon {
+  width: 56px; height: 56px;
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+}
+.c1 .dash-icon { background: var(--teal-dim);   border: 1px solid rgba(43,181,160,0.18); }
+.c2 .dash-icon { background: var(--gold-dim);   border: 1px solid rgba(201,168,76,0.18); }
+.c3 .dash-icon { background: var(--violet-dim); border: 1px solid rgba(155,125,232,0.18); }
+
+.dash-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem; font-weight: 700;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+
+.dash-text {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.75;
+  margin-bottom: 22px;
+  min-height: 52px;
+  font-weight: 300;
+}
+
+.dash-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  font-size: 0.82rem; font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 10px;
+  transition: background .2s, border-color .2s, color .2s;
+}
+.c1 .dash-link { background: var(--teal-dim); border: 1px solid rgba(43,181,160,0.18); color: var(--teal-lt); }
+.c2 .dash-link { background: var(--gold-dim); border: 1px solid rgba(201,168,76,0.18); color: var(--gold-lt); }
+.c3 .dash-link { background: var(--violet-dim); border: 1px solid rgba(155,125,232,0.18); color: var(--violet-lt); }
+.dash-link:hover { filter: brightness(1.15); }
+
+
+.info-section {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 18px;
+  opacity: 0;
+  animation: riseIn .8s cubic-bezier(.22,.68,0,1.2) .35s forwards;
+}
+
+.info-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 30px 26px;
+  position: relative; overflow: hidden;
+}
+.info-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-hi), transparent);
+}
+
+.section-kicker {
+  display: inline-block;
+  padding: 6px 13px;
+  border-radius: 999px;
+  background: var(--gold-dim);
+  border: 1px solid rgba(201,168,76,0.20);
+  color: var(--gold-lt);
+  font-size: 0.72rem; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+.section-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem; font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+.section-text {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.8;
+  margin-bottom: 22px;
+  font-weight: 300;
+}
+
+
+.feature-list {
+  display: grid;
+  gap: 12px;
+}
+
+.feature-item {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--lift);
+  border: 1px solid var(--border);
+  transition: border-color .2s;
+}
+.feature-item:hover { border-color: rgba(201,168,76,0.14); }
+
+.feature-icon {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  background: var(--gold-dim);
+  border: 1px solid rgba(201,168,76,0.16);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; flex-shrink: 0;
+}
+
+.feature-item h4 {
+  font-size: 0.9rem; font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.feature-item p {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.65;
+  font-weight: 300;
+}
+
+
+.quick-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.quick-box {
+  border-radius: 16px;
+  padding: 18px 20px;
+  background: var(--lift);
+  border: 1px solid var(--border);
+  transition: border-color .2s, transform .2s;
+}
+.quick-box:hover {
+  border-color: rgba(201,168,76,0.16);
+  transform: translateX(3px);
+}
+
+.quick-box h4 {
+  font-size: 0.92rem; font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.quick-box p {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.65;
+  margin-bottom: 12px;
+  font-weight: 300;
+}
+.quick-box a {
+  text-decoration: none;
+  color: var(--gold-lt);
+  font-weight: 600;
+  font-size: 0.82rem;
+  display: inline-flex; align-items: center; gap: 5px;
+  transition: gap .2s;
+}
+.quick-box a:hover { gap: 9px; }
+
+
+.dash-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-hi) 40%, var(--border-hi) 60%, transparent);
+  margin: 24px 0;
+}
+
+
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.dashboard-hero {
+  opacity: 0;
+  animation: riseIn .7s cubic-bezier(.22,.68,0,1.2) .05s forwards;
+}
+
+
+@media (max-width: 980px) {
+  .dashboard-hero,
+  .info-section { grid-template-columns: 1fr; }
+  .dashboard-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 640px) {
+  .dashboard-grid { grid-template-columns: 1fr; }
+  .dashboard-hero { padding: 26px 22px; }
+  .info-card { padding: 24px 20px; }
+  .hero-title { font-size: 1.8rem; }
+}
+</style>
+
+<canvas id="particleCanvas"></canvas>
+
+<div class="customer-dashboard">
+
+  
+  <div class="dashboard-hero">
+    <div class="hero-orb2"></div>
+    <div class="hero-content">
+      <div class="hero-badge"> Farm Fresh Marketplace</div>
+      <h1 class="hero-title">Welcome back, <span>{{ user.username }}</span> 👋</h1>
+      <p class="hero-text">
+        Buy directly from farmers without the usual clutter. Fresh products, simpler ordering, and a cleaner shopping flow that is the whole point.
+      </p>
+      <div class="hero-actions">
+        <a href="{% url 'product_list' %}" class="btn-gold">🛒 Browse Products</a>
+        <a href="{% url 'my_orders' %}" class="btn-ghost">View My Orders </a>
+      </div>
+    </div>
+
+    <div class="hero-side">
+      <div class="hero-mini-card">
+        <div class="hero-mini-label">Marketplace Focus</div>
+        <div class="hero-mini-value">Fresh & Direct</div>
+        <div class="hero-mini-sub">No unnecessary middle-layer feel</div>
+      </div>
+      <div class="hero-mini-card">
+        <div class="hero-mini-label">Shopping Experience</div>
+        <div class="hero-mini-value">Simple Checkout</div>
+        <div class="hero-mini-sub">Review cart, place order, track easily</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dash-divider"></div>
+
+  <div class="dashboard-grid">
+    <div class="dash-card c1">
+      <div class="dash-orb"></div>
+      <div class="dash-icon">🥦</div>
+      <div class="dash-title">Fresh Products</div>
+      <div class="dash-text">Explore vegetables, fruits, and other farm items added by real farmers. This is your starting point.</div>
+      <a href="{% url 'product_list' %}" class="dash-link">Browse Now </a>
+    </div>
+
+    <div class="dash-card c2">
+      <div class="dash-orb"></div>
+      <div class="dash-icon">🛒</div>
+      <div class="dash-title">My Cart</div>
+      <div class="dash-text">Review selected products, verify totals, and remove junk before placing the order.</div>
+      <a href="{% url 'view_cart' %}" class="dash-link">View Cart </a>
+    </div>
+
+    <div class="dash-card c3">
+      <div class="dash-orb"></div>
+      <div class="dash-icon">📦</div>
+      <div class="dash-title">My Orders</div>
+      <div class="dash-text">Track placed orders and stay clear on what was ordered, when, and what is pending.</div>
+      <a href="{% url 'my_orders' %}" class="dash-link">View Orders </a>
+    </div>
+  </div>
+
+  <div class="dash-divider"></div>
+
+ 
+  <div class="info-section">
+    <div class="info-card">
+      <div class="section-kicker">Why Use FarmDirect</div>
+      <div class="section-title">A cleaner way to buy from farmers</div>
+      <div class="section-text">
+        Most dashboards look lifeless because they stop at functionality. This one actually explains value and guides the user instead of dumping three buttons and hoping for the best.
+      </div>
+
+      <div class="feature-list">
+        <div class="feature-item">
+          <div class="feature-icon">🌿</div>
+          <div>
+            <h4>Direct farmer access</h4>
+            <p>Buy products closer to the source instead of browsing a generic, disconnected marketplace.</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">⚡</div>
+          <div>
+            <h4>Fast product discovery</h4>
+            <p>Browse, add to cart, and move to checkout without a cluttered interface slowing everything down.</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">✅</div>
+          <div>
+            <h4>Better order clarity</h4>
+            <p>Track your orders properly so you are not guessing what was placed or what still needs attention.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-card">
+      <div class="section-kicker">Quick Access</div>
+      <div class="section-title">Do the important stuff fast</div>
+      <div class="section-text">
+        Don't make users think too much. Give them the next useful actions clearly.
+      </div>
+
+      <div class="quick-panel">
+        <div class="quick-box">
+          <h4>Start shopping</h4>
+          <p>Go through available products and add what you need to cart.</p>
+          <a href="{% url 'product_list' %}">Open product catalog..</a>
+        </div>
+        <div class="quick-box">
+          <h4>Review before checkout</h4>
+          <p>Double-check selected items, quantities, and totals before placing the order.</p>
+          <a href="{% url 'view_cart' %}">Open my cart..</a>
+        </div>
+        <div class="quick-box">
+          <h4>Track placed orders</h4>
+          <p>Keep an eye on order progress instead of blindly waiting.</p>
+          <a href="{% url 'my_orders' %}">Open my orders...</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  const canvas = document.getElementById('particleCanvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+  const COUNT = 28;
+
+  function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+  function rand(a,b) { return a + Math.random()*(b-a); }
+
+  function spawn() {
+    const isGold = Math.random() > 0.55;
+    return {
+      x: rand(0,W), y: rand(-40,H+40),
+      r: rand(0.8,2.5),
+      vx: rand(-0.15,0.15), vy: rand(-0.4,-0.1),
+      alpha: rand(0.04,0.20),
+      pulse: rand(0,Math.PI*2), pv: rand(0.01,0.022),
+      color: isGold ? '201,168,76' : '180,180,200'
+    };
+  }
+
+  function init() {
+    resize();
+    particles = Array.from({length:COUNT}, spawn);
+    particles.forEach(p => { p.y = rand(0,H); });
+  }
+
+  function draw() {
+    ctx.clearRect(0,0,W,H);
+    particles.forEach(p => {
+      p.pulse += p.pv;
+      const a = p.alpha * (0.65 + 0.35*Math.sin(p.pulse));
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(${p.color},${a})`;
+      ctx.fill();
+      p.x += p.vx; p.y += p.vy;
+      if (p.y < -20) { Object.assign(p, spawn()); p.y = H+10; }
+      if (p.x < -10) p.x = W+10;
+      if (p.x > W+10) p.x = -10;
+    });
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize);
+  init(); draw();
+})();
+</script>
+
+{% endblock %}

@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+{% block title %}Settings — FarmDirect{% endblock %}
+{% block content %}
+<div class="container">
+
+  <div class="page-header" style="background:none;border:none;padding:28px 0 20px;">
+    <div class="page-title">
+      <span class="title-icon"><i class="fa-solid fa-gear"></i></span>
+      Settings
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:220px 1fr;gap:28px;align-items:start;max-width:900px;">
+
+    <!-- Sidebar tabs -->
+    <div class="card">
+      <div class="card-body" style="padding:8px 0;">
+        <a href="#security" class="nav-dd-item settings-tab active-tab" onclick="showTab('security',this)" style="padding:12px 20px;">
+          <i class="fa-solid fa-lock" style="width:18px;color:var(--gray-400)"></i> Security
+        </a>
+        <a href="#notifications" class="nav-dd-item settings-tab" onclick="showTab('notifications',this)" style="padding:12px 20px;">
+          <i class="fa-solid fa-bell" style="width:18px;color:var(--gray-400)"></i> Notifications
+        </a>
+        <a href="#account" class="nav-dd-item settings-tab" onclick="showTab('account',this)" style="padding:12px 20px;">
+          <i class="fa-solid fa-user-shield" style="width:18px;color:var(--gray-400)"></i> Account
+        </a>
+        <div class="nav-dd-divider"></div>
+        <a href="{% url 'profile' %}" class="nav-dd-item" style="padding:12px 20px;">
+          <i class="fa-solid fa-arrow-left" style="width:18px;color:var(--gray-400)"></i> Back to Profile
+        </a>
+      </div>
+    </div>
+
+    <!-- Content panels -->
+    <div>
+
+      <!-- Security panel -->
+      <div id="panel-security">
+        <div class="card" style="margin-bottom:20px;">
+          <div class="card-header">
+            <div class="card-title"><i class="fa-solid fa-key" style="color:var(--green)"></i> Change Password</div>
+          </div>
+          <div class="card-body">
+            <form method="POST">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="change_password">
+
+              <div class="form-group">
+                <label>Current Password</label>
+                <div class="input-icon" style="position:relative;">
+                  <i class="fa-solid fa-lock"></i>
+                  <input type="password" name="old_password" class="form-control" required placeholder="Enter current password">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>New Password</label>
+                <div class="input-icon">
+                  <i class="fa-solid fa-lock"></i>
+                  <input type="password" name="new_password" id="newpw" class="form-control" required placeholder="Min. 6 characters">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Confirm New Password</label>
+                <div class="input-icon">
+                  <i class="fa-solid fa-lock"></i>
+                  <input type="password" name="confirm_password" id="confirmpw" class="form-control" required placeholder="Repeat new password" oninput="checkMatch()">
+                </div>
+                <div id="pw-match-msg" style="font-size:.78rem;margin-top:5px;display:none;"></div>
+              </div>
+
+              <div style="background:var(--blue-light);border-radius:8px;padding:12px 16px;margin-bottom:18px;font-size:.82rem;color:var(--blue);">
+                <i class="fa-solid fa-shield-halved"></i>
+                Use at least 8 characters, mix of letters, numbers and symbols for a strong password.
+              </div>
+
+              <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-floppy-disk"></i> Update Password
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- 2FA placeholder -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fa-solid fa-mobile-screen" style="color:var(--green)"></i> Two-Factor Authentication</div>
+            <span class="badge badge-gray">Coming Soon</span>
+          </div>
+          <div class="card-body" style="color:var(--gray-500);font-size:.88rem;line-height:1.8;">
+            Add an extra layer of security to your account by enabling 2FA via SMS or authenticator app.
+          </div>
+        </div>
+      </div>
+
+      <!-- Notifications panel -->
+      <div id="panel-notifications" style="display:none;">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fa-solid fa-bell" style="color:var(--green)"></i> Notification Preferences</div>
+          </div>
+          <div class="card-body">
+            <div style="display:flex;flex-direction:column;gap:0;">
+
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:1px solid var(--gray-100);">
+                <div>
+                  <div style="font-weight:600;color:var(--gray-800);font-size:.9rem;">Order Updates</div>
+                  <div style="font-size:.78rem;color:var(--gray-500);">Get notified when your order status changes.</div>
+                </div>
+                <label class="toggle-sw"><input type="checkbox" checked><span class="toggle-sl"></span></label>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:1px solid var(--gray-100);">
+                <div>
+                  <div style="font-weight:600;color:var(--gray-800);font-size:.9rem;">New Arrivals</div>
+                  <div style="font-size:.78rem;color:var(--gray-500);">Fresh produce and product alerts from farmers.</div>
+                </div>
+                <label class="toggle-sw"><input type="checkbox" checked><span class="toggle-sl"></span></label>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:1px solid var(--gray-100);">
+                <div>
+                  <div style="font-weight:600;color:var(--gray-800);font-size:.9rem;">Delivery Updates</div>
+                  <div style="font-size:.78rem;color:var(--gray-500);">Real-time delivery status notifications.</div>
+                </div>
+                <label class="toggle-sw"><input type="checkbox" checked><span class="toggle-sl"></span></label>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:1px solid var(--gray-100);">
+                <div>
+                  <div style="font-weight:600;color:var(--gray-800);font-size:.9rem;">Offers & Coupons</div>
+                  <div style="font-size:.78rem;color:var(--gray-500);">Exclusive deals and discount codes.</div>
+                </div>
+                <label class="toggle-sw"><input type="checkbox"><span class="toggle-sl"></span></label>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 0;">
+                <div>
+                  <div style="font-weight:600;color:var(--gray-800);font-size:.9rem;">Support Replies</div>
+                  <div style="font-size:.78rem;color:var(--gray-500);">Notifications when support team responds.</div>
+                </div>
+                <label class="toggle-sw"><input type="checkbox" checked><span class="toggle-sl"></span></label>
+              </div>
+            </div>
+
+            <div style="margin-top:20px;padding:12px 16px;background:var(--green-light);border-radius:8px;font-size:.8rem;color:var(--green-dark);">
+              <i class="fa-solid fa-info-circle"></i> Notification settings will be saved automatically.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Account panel -->
+      <div id="panel-account" style="display:none;">
+        <div class="card" style="margin-bottom:20px;">
+          <div class="card-header">
+            <div class="card-title"><i class="fa-solid fa-user-shield" style="color:var(--green)"></i> Account Information</div>
+          </div>
+          <div class="card-body">
+            <div style="display:grid;gap:14px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--gray-100);">
+                <div style="font-size:.85rem;color:var(--gray-600);">Account Type</div>
+                <span class="badge badge-green">{{ user.role|capfirst }}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--gray-100);">
+                <div style="font-size:.85rem;color:var(--gray-600);">Member Since</div>
+                <div style="font-weight:600;font-size:.85rem;">{{ user.date_joined|date:"d M Y" }}</div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;">
+                <div style="font-size:.85rem;color:var(--gray-600);">Account Status</div>
+                <span class="badge badge-green"><i class="fa-solid fa-circle" style="font-size:.5rem;"></i> Active</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="border-color:var(--red-light);">
+          <div class="card-header" style="background:var(--red-light);">
+            <div class="card-title" style="color:var(--red)"><i class="fa-solid fa-triangle-exclamation"></i> Danger Zone</div>
+          </div>
+          <div class="card-body">
+            <p style="font-size:.85rem;color:var(--gray-600);margin-bottom:16px;">
+              Once you delete your account, all your data will be permanently removed. This cannot be undone.
+            </p>
+            <button class="btn btn-danger btn-sm" onclick="alert('Please contact support to delete your account.')">
+              <i class="fa-solid fa-trash"></i> Delete My Account
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<style>
+.active-tab { color: var(--green) !important; background: var(--green-light); }
+.active-tab i { color: var(--green) !important; }
+.toggle-sw { position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0; }
+.toggle-sw input { opacity:0;width:0;height:0; }
+.toggle-sl {
+  position:absolute;inset:0;cursor:pointer;
+  background:var(--gray-200);border-radius:24px;transition:.3s;
+}
+.toggle-sl::before {
+  content:"";position:absolute;width:18px;height:18px;
+  left:3px;bottom:3px;background:white;border-radius:50%;transition:.3s;
+  box-shadow:0 1px 3px rgba(0,0,0,.2);
+}
+.toggle-sw input:checked + .toggle-sl { background:var(--green); }
+.toggle-sw input:checked + .toggle-sl::before { transform:translateX(20px); }
+</style>
+
+<script>
+function showTab(name, el) {
+  event.preventDefault();
+  document.querySelectorAll('[id^="panel-"]').forEach(p => p.style.display='none');
+  document.getElementById('panel-'+name).style.display='block';
+  document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active-tab'));
+  el.classList.add('active-tab');
+}
+
+function checkMatch() {
+  const np = document.getElementById('newpw').value;
+  const cp = document.getElementById('confirmpw').value;
+  const msg = document.getElementById('pw-match-msg');
+  if (cp.length === 0) { msg.style.display='none'; return; }
+  msg.style.display='block';
+  if (np === cp) {
+    msg.innerHTML='<span style="color:var(--green)"><i class="fa-solid fa-check"></i> Passwords match</span>';
+  } else {
+    msg.innerHTML='<span style="color:var(--red)"><i class="fa-solid fa-xmark"></i> Passwords do not match</span>';
+  }
+}
+</script>
+{% endblock %}

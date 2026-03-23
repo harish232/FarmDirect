@@ -1,0 +1,490 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --void:   white;
+  --charcoal:#2a3552;
+  --iron:    #2a2a31;
+  --steel:   #3c3c47;
+  --silver:  #a0a0b4;
+  --mist:    #c8c8d8;
+  --snow:    #eeeef4;
+  --border:  rgba(255,255,255,0.06);
+}
+
+body { background: var(--void); }
+
+.mo-root {
+  min-height: 100vh;
+  background: var(--void);
+  background-image:
+    radial-gradient(ellipse 70% 55% at 12% 6%,  rgba(160,160,180,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 70% at 88% 92%, rgba(100,100,130,0.05) 0%, transparent 55%);
+  font-family: 'DM Sans', sans-serif;
+  padding: 40px 24px 80px;
+  position: relative; overflow-x: hidden;
+}
+
+#particleCanvas {
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 0;
+}
+
+.mo-inner {
+  position: relative; z-index: 1;
+  max-width: 1180px; margin: 0 auto;
+}
+
+/* ══════════════════════════════
+   HERO
+══════════════════════════════ */
+.mo-hero {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 22px; align-items: center;
+  background: var(--charcoal);
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  padding: 36px 34px;
+  margin-bottom: 28px;
+  position: relative; overflow: hidden;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.50);
+  opacity: 0;
+  animation: riseIn 0.8s cubic-bezier(.22,.68,0,1.2) 0.05s forwards;
+}
+
+.mo-hero::before {
+  content: "";
+  position: absolute; width: 260px; height: 260px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(160,160,200,0.07) 0%, transparent 70%);
+  top: -100px; right: -80px; pointer-events: none;
+}
+.mo-hero::after {
+  content: "";
+  position: absolute; width: 180px; height: 180px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(120,120,160,0.05) 0%, transparent 70%);
+  bottom: -60px; left: -50px; pointer-events: none;
+}
+
+.hero-shimmer {
+  position: absolute; top: 0; left: -100%;
+  width: 55%; height: 100%;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.04) 50%, transparent 60%);
+  animation: shimmerSweep 1.2s 0.75s forwards;
+  pointer-events: none;
+}
+@keyframes shimmerSweep { to { left: 160%; } }
+
+.hero-left, .hero-right { position: relative; z-index: 1; }
+
+.hero-eyebrow {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--silver); display: block; margin-bottom: 16px;
+}
+
+.hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(32px, 4vw, 48px);
+  font-weight: 900; color: var(--snow);
+  line-height: 1.08; margin-bottom: 12px;
+}
+.hero-title em {
+  font-style: italic;
+  background: linear-gradient(135deg, var(--mist), var(--silver));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-text {
+  font-size: 14.5px; line-height: 1.85;
+  color: rgba(200,200,216,0.50); max-width: 500px;
+}
+
+.hero-right { display: grid; gap: 14px; }
+
+.hero-mini {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 18px; padding: 18px 20px;
+  transition: border-color .25s;
+}
+.hero-mini:hover { border-color: rgba(160,160,180,0.18); }
+
+.mini-label {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.10em; text-transform: uppercase;
+  color: rgba(200,200,216,0.40); margin-bottom: 8px;
+}
+.mini-value {
+  font-family: 'Playfair Display', serif;
+  font-size: 24px; font-weight: 700;
+  color: var(--snow); margin-bottom: 5px;
+}
+.mini-sub { font-size: 12px; color: rgba(200,200,216,0.42); line-height: 1.55; }
+
+/* ══════════════════════════════
+   ORDERS LIST
+══════════════════════════════ */
+.mo-list {
+  display: grid; gap: 18px;
+  opacity: 0;
+  animation: riseIn 0.78s cubic-bezier(.22,.68,0,1.2) 0.22s forwards;
+}
+
+.order-card {
+  background: var(--charcoal);
+  border: 1px solid var(--border);
+  border-radius: 24px; padding: 26px;
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 22px; align-items: start;
+  box-shadow: 0 24px 48px rgba(0,0,0,0.35);
+  transition: border-color .25s, transform .25s;
+}
+.order-card:hover { border-color: rgba(160,160,180,0.16); transform: translateY(-2px); }
+
+/* Left */
+.order-main { display: flex; gap: 16px; align-items: flex-start; }
+
+.order-icon {
+  width: 60px; height: 60px; border-radius: 16px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.07);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; flex-shrink: 0;
+  transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+}
+.order-card:hover .order-icon { transform: scale(1.08) rotate(-4deg); }
+
+.order-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px; font-weight: 700;
+  color: var(--snow); margin-bottom: 14px; line-height: 1.2;
+}
+
+/* Info grid */
+.order-info-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 10px; margin-bottom: 12px;
+}
+
+.info-box {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 13px; padding: 12px 14px;
+  transition: border-color .2s;
+}
+.info-box:hover { border-color: rgba(160,160,180,0.12); }
+
+.info-label {
+  font-size: 10.5px; font-weight: 700;
+  letter-spacing: 0.10em; text-transform: uppercase;
+  color: rgba(200,200,216,0.36); margin-bottom: 5px;
+}
+.info-value {
+  font-size: 13.5px; font-weight: 700;
+  color: var(--mist); line-height: 1.4;
+}
+.info-value.price {
+  font-family: 'Playfair Display', serif;
+  font-size: 16px; color: var(--snow);
+}
+.info-value.paid    { color: #74d4a2; }
+.info-value.unpaid  { color: #f5c67e; }
+
+/* Address box */
+.address-box {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 13px; padding: 13px 15px;
+  margin-bottom: 10px;
+}
+.address-box .info-label { margin-bottom: 7px; }
+.address-text {
+  font-size: 13px; font-weight: 600;
+  color: rgba(200,200,216,0.65); line-height: 1.75;
+}
+
+.order-date { font-size: 11.5px; color: rgba(200,200,216,0.32); margin-top: 8px; }
+
+/* Right side */
+.order-side { display: flex; flex-direction: column; gap: 14px; }
+
+/* Status box */
+.status-box {
+  background: #f2f2f5;
+  border-radius: 18px; padding: 18px;
+}
+.status-box-label {
+  font-size: 10.5px; font-weight: 700;
+  letter-spacing: 0.10em; text-transform: uppercase;
+  color: #7a7a8e; margin-bottom: 10px;
+}
+
+.st-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 16px; border-radius: 999px;
+  font-size: 13px; font-weight: 700; margin-bottom: 10px;
+}
+.st-pill.pending   { background: rgba(212,147,74,0.14); color: #e07a20; border: 1px solid rgba(212,147,74,0.24); }
+.st-pill.confirmed { background: rgba(61,155,110,0.14); color: #2e8a60; border: 1px solid rgba(61,155,110,0.24); }
+.st-pill.delivered { background: rgba(91,141,238,0.14); color: #3a6ec0; border: 1px solid rgba(91,141,238,0.24); }
+
+.status-note { font-size: 12.5px; color: #7a7a8e; line-height: 1.7; }
+
+/* Shop more box */
+.shop-box {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 18px; padding: 18px;
+  transition: border-color .2s;
+}
+.shop-box:hover { border-color: rgba(160,160,180,0.14); }
+
+.shop-box h4 { font-size: 14px; font-weight: 700; color: var(--snow); margin-bottom: 7px; }
+.shop-box p  { font-size: 12.5px; color: rgba(200,200,216,0.44); line-height: 1.7; margin-bottom: 13px; }
+
+.btn-shop {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 11px 18px; border-radius: 999px;
+  background: linear-gradient(135deg, var(--iron), var(--steel));
+  color: var(--snow); font-size: 13px; font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.28), inset 0 0 0 1px rgba(255,255,255,0.07);
+  transition: transform .2s, box-shadow .2s;
+}
+.btn-shop:hover { transform: translateY(-2px); box-shadow: 0 14px 28px rgba(0,0,0,0.40); }
+
+/* ══════════════════════════════
+   EMPTY STATE
+══════════════════════════════ */
+.mo-empty {
+  background: var(--charcoal);
+  border: 1px solid var(--border);
+  border-radius: 26px; padding: 64px 32px;
+  text-align: center;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.45);
+  opacity: 0;
+  animation: riseIn 0.78s cubic-bezier(.22,.68,0,1.2) 0.22s forwards;
+}
+
+.mo-empty-icon { font-size: 54px; display: block; margin-bottom: 18px; }
+
+.mo-empty h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 26px; font-weight: 700;
+  color: var(--snow); margin-bottom: 12px;
+}
+.mo-empty p {
+  font-size: 14px; color: rgba(200,200,216,0.42);
+  max-width: 420px; margin: 0 auto 26px; line-height: 1.8;
+}
+
+.btn-empty {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 14px 28px; border-radius: 999px;
+  background: linear-gradient(135deg, var(--iron), var(--steel));
+  color: var(--snow); font-size: 14px; font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.32), inset 0 0 0 1px rgba(255,255,255,0.07);
+  transition: transform .2s, box-shadow .2s;
+}
+.btn-empty:hover { transform: translateY(-2px); box-shadow: 0 16px 36px rgba(0,0,0,0.42); }
+
+/* ══════════════════════════════
+   ANIMATIONS
+══════════════════════════════ */
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ══════════════════════════════
+   RESPONSIVE
+══════════════════════════════ */
+@media (max-width: 980px) {
+  .mo-hero    { grid-template-columns: 1fr; }
+  .order-card { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .mo-root { padding: 24px 14px 60px; }
+  .mo-hero { padding: 26px 20px; border-radius: 20px; }
+  .order-info-grid { grid-template-columns: 1fr; }
+  .hero-title { font-size: 30px; }
+}
+</style>
+
+<canvas id="particleCanvas"></canvas>
+
+<div class="mo-root">
+  <div class="mo-inner">
+
+    <!-- ══ HERO ══ -->
+    <div class="mo-hero">
+      <div class="hero-shimmer"></div>
+
+      <div class="hero-left">
+        <span class="hero-eyebrow">📦 Purchase Tracker</span>
+        <h1 class="hero-title">My <em>Orders</em></h1>
+        <p class="hero-text">
+          Track your placed orders, check their current status, and stay clear on what is pending, confirmed, or already delivered.
+        </p>
+      </div>
+
+      <div class="hero-right">
+        <div class="hero-mini">
+          <div class="mini-label">Total Orders</div>
+          <div class="mini-value">{{ orders|length }}</div>
+          <div class="mini-sub">All your orders currently shown on this page.</div>
+        </div>
+        <div class="hero-mini">
+          <div class="mini-label">Shopping Status</div>
+          <div class="mini-value">Active</div>
+          <div class="mini-sub">You can browse and place more orders anytime.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ORDERS ══ -->
+    {% if orders %}
+    <div class="mo-list">
+      {% for order in orders %}
+      <div class="order-card">
+
+        <!-- LEFT -->
+        <div class="order-main">
+          <div class="order-icon">🧺</div>
+          <div style="flex:1;">
+            <div class="order-name">{{ order.product.name }}</div>
+
+            <div class="order-info-grid">
+              <div class="info-box">
+                <div class="info-label">Quantity</div>
+                <div class="info-value">{{ order.quantity }} {{ order.product.unit }}</div>
+              </div>
+              <div class="info-box">
+                <div class="info-label">Total Amount</div>
+                <div class="info-value price">₹{{ order.total_price }}</div>
+              </div>
+              <div class="info-box">
+                <div class="info-label">Payment Method</div>
+                <div class="info-value">{{ order.get_payment_method_display }}</div>
+              </div>
+              <div class="info-box">
+                <div class="info-label">Payment Status</div>
+                {% if order.payment_status == 'paid' %}
+                  <div class="info-value paid">✓ {{ order.get_payment_status_display }}</div>
+                {% else %}
+                  <div class="info-value unpaid">⏳ {{ order.get_payment_status_display }}</div>
+                {% endif %}
+              </div>
+            </div>
+
+            {% if order.address %}
+            <div class="address-box">
+              <div class="info-label">Delivery Address</div>
+              <div class="address-text">
+                {{ order.address }},<br>
+                {{ order.city }} — {{ order.pincode }}<br>
+                📞 {{ order.phone_number }}
+              </div>
+            </div>
+            {% endif %}
+
+            <div class="order-date">Ordered on {{ order.ordered_at|date:"d M Y, h:i A" }}</div>
+          </div>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="order-side">
+          <div class="status-box">
+            <div class="status-box-label">Current Status</div>
+            {% if order.status == 'pending' %}
+              <div class="st-pill pending">⏳ Pending</div>
+              <div class="status-note">Your order is placed and waiting for seller confirmation.</div>
+            {% elif order.status == 'confirmed' %}
+              <div class="st-pill confirmed">✅ Confirmed</div>
+              <div class="status-note">The seller confirmed your order and it is being processed.</div>
+            {% else %}
+              <div class="st-pill delivered">🚚 Delivered</div>
+              <div class="status-note">This order has been marked as delivered.</div>
+            {% endif %}
+          </div>
+
+          <div class="shop-box">
+            <h4>Need more fresh items?</h4>
+            <p>Browse more products and continue shopping.</p>
+            <a href="{% url 'product_list' %}" class="btn-shop">Browse Products →</a>
+          </div>
+        </div>
+
+      </div>
+      {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="mo-empty">
+      <span class="mo-empty-icon">📦</span>
+      <h3>No orders yet</h3>
+      <p>You haven't placed any orders yet. Start shopping and fix that.</p>
+      <a href="{% url 'product_list' %}" class="btn-empty">Start Shopping →</a>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<script>
+(function() {
+  const canvas = document.getElementById('particleCanvas');
+  const ctx    = canvas.getContext('2d');
+  let W, H, particles = [];
+  const COUNT = 30;
+
+  function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+  function rand(a,b) { return a + Math.random()*(b-a); }
+
+  function spawn() {
+    return {
+      x: rand(0,W), y: rand(-40,H+40),
+      r: rand(1,3.5),
+      vx: rand(-0.18,0.18), vy: rand(-0.45,-0.12),
+      alpha: rand(0.06,0.28),
+      pulse: rand(0,Math.PI*2), pv: rand(0.012,0.025)
+    };
+  }
+
+  function init() {
+    resize();
+    particles = Array.from({length:COUNT}, spawn);
+    particles.forEach(p => { p.y = rand(0,H); });
+  }
+
+  function draw() {
+    ctx.clearRect(0,0,W,H);
+    particles.forEach(p => {
+      p.pulse += p.pv;
+      const a = p.alpha * (0.65 + 0.35*Math.sin(p.pulse));
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle = `rgba(180,180,200,${a})`; ctx.fill();
+      p.x += p.vx; p.y += p.vy;
+      if (p.y < -20) { Object.assign(p,spawn()); p.y = H+10; }
+      if (p.x < -10)  p.x = W+10;
+      if (p.x > W+10) p.x = -10;
+    });
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize);
+  init(); draw();
+})();
+</script>
+
+{% endblock %}

@@ -1,0 +1,508 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,700;0,900;1,300;1,700&family=Cabinet+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+<style>
+
+:root {
+  --ink:      #f8f9f4;
+  --bark:     #eef2e8;
+  --umber:    #e4ede0;
+  --grove:    #dce8d6;
+  --fern:     #2e6018;
+  --lime:     #1a6b2f;
+  --gold:     #e8c84a;
+  --cream:    #000000;
+  --fog:      rgba(26,46,30,0.06);
+  --fog2:     rgba(0,0,0,0.15);
+  --fog3:     rgba(0,0,0,0.65);
+  --limeglow: rgba(26,107,47,0.22);
+  --ease:     cubic-bezier(.22,.68,0,1.2);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--ink);
+  color: #111111;
+  font-family: 'Cabinet Grotesk', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: "";
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size: 200px;
+  pointer-events: none; z-index: 0; opacity: .65;
+}
+
+
+
+#lg-canvas {
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 0; opacity: .4;
+}
+
+
+.blobs {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+}
+.blob {
+  position: absolute; border-radius: 50%;
+  filter: blur(100px); opacity: .1;
+  animation: blobdrift 20s ease-in-out infinite alternate;
+}
+.blob:nth-child(1) { width:600px; height:600px; background:#4e8c2f; top:-180px; right:-100px; animation-delay:0s; }
+.blob:nth-child(2) { width:400px; height:400px; background:#b8e05a; bottom:10%; left:-80px; animation-delay:-9s; }
+.blob:nth-child(3) { width:320px; height:320px; background:#7aaa3a; top:40%; left:40%; animation-delay:-16s; }
+@keyframes blobdrift { from{transform:translate(0,0) scale(1)} to{transform:translate(28px,22px) scale(1.07)} }
+
+
+.lg-page {
+  position: relative; z-index: 1;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+
+.lg-left {
+  background: var(--bark);
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: space-between;
+  padding: 60px 52px 60px 40px;
+  clip-path: polygon(0 0, 100% 0, 90% 100%, 0 100%);
+}
+
+.lg-left::before {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(160deg, rgba(90,158,48,.16) 0%, transparent 55%);
+  pointer-events: none;
+}
+
+
+.lg-left-bg { position: absolute; inset: 0; z-index: 0; }
+.lg-left-bg img {
+  width: 100%; height: 100%; object-fit: cover;
+  opacity: .1; filter: grayscale(30%);
+}
+.lg-left-bg::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(200,220,195,.55) 0%, rgba(200,220,195,.88) 100%);
+}
+
+.lg-left-content { position: relative; z-index: 1; }
+
+.eyebrow-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 18px; border-radius: 999px;
+  border: 1px solid rgba(0,0,0,.3);
+  background: rgba(0,0,0,.08);
+  color: #1a6b2f; font-size: .78rem; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase;
+  margin-bottom: 28px; width: fit-content;
+}
+.eyebrow-pill span {
+  width: 6px; height: 6px; background: #1a6b2f;
+  border-radius: 50%; animation: blink 1.8s ease infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+.lg-headline {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(2.6rem, 3.2vw, 3.8rem);
+  font-weight: 900; line-height: 1.02; letter-spacing: -1.5px;
+  color: #111111; margin-bottom: 18px;
+}
+.lg-headline em { font-style: italic; font-weight: 300; color: #1a6b2f; display: block; }
+
+.lg-sub {
+  font-size: .93rem; line-height: 1.85;
+  color: var(--fog3); max-width: 400px; margin-bottom: 40px;
+}
+
+
+.access-cards { display: flex; flex-direction: column; gap: 14px; margin-bottom: 40px; }
+
+.access-card {
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,.12);
+  border-radius: 20px; padding: 20px 22px;
+  backdrop-filter: blur(10px);
+  transition: border-color .22s, background .22s, transform .22s var(--ease);
+  cursor: default;
+}
+.access-card:hover {
+  border-color: rgba(0,0,0,.3);
+  background: rgba(0,0,0,.07);
+  transform: translateX(5px);
+}
+.access-card-header {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 8px;
+}
+.access-icon {
+  width: 38px; height: 38px; border-radius: 12px;
+  display: grid; place-items: center; font-size: 1.1rem;
+  background: linear-gradient(135deg, rgba(90,158,48,.3), rgba(184,224,90,.15));
+  border: 1px solid rgba(0,0,0,.2); flex-shrink: 0;
+}
+.access-card-title {
+  font-family: 'Fraunces', serif; font-size: 1rem; font-weight: 700; color: #111111;
+}
+.access-card p { font-size: .82rem; color: var(--fog3); line-height: 1.7; }
+
+
+.lg-stats {
+  display: flex; gap: 28px;
+  padding-top: 28px;
+  border-top: 1px solid rgba(0,0,0,.1);
+}
+.lg-stat-num {
+  font-family: 'Fraunces', serif; font-size: 1.6rem; font-weight: 700;
+  color: #1a6b2f; line-height: 1;
+}
+.lg-stat-label { font-size: .75rem; color: var(--fog3); margin-top: 3px; }
+
+
+.lg-right {
+  background: var(--umber);
+  display: flex; align-items: center; justify-content: center;
+  padding: 60px 52px 60px 60px;
+  position: relative;
+}
+.lg-right::before {
+  content: "";
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(184,224,90,.18), transparent);
+}
+
+.lg-form-box { width: 100%; max-width: 400px; }
+
+.form-kicker {
+  display: inline-block;
+  font-size: .72rem; font-weight: 800; letter-spacing: .18em; text-transform: uppercase;
+  color: #1a6b2f; margin-bottom: 14px;
+}
+
+.form-title {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(2.4rem, 3vw, 3.2rem); font-weight: 900;
+  letter-spacing: -1px; line-height: 1.05;
+  color: #111111; margin-bottom: 8px;
+}
+.form-title em { font-style: italic; font-weight: 300; color: #1a6b2f; }
+
+.form-subtitle {
+  font-size: .88rem; color: var(--fog3); line-height: 1.8; margin-bottom: 32px;
+}
+
+
+.alert {
+  padding: 12px 16px; border-radius: 14px;
+  font-size: .85rem; margin-bottom: 20px; line-height: 1.6;
+}
+.alert-error {
+  background: rgba(255,90,60,.1);
+  border: 1px solid rgba(255,90,60,.25);
+  color: #ff9a85;
+}
+.alert-success {
+  background: rgba(0,0,0,.1);
+  border: 1px solid rgba(0,0,0,.25);
+  color: #1a6b2f;
+}
+
+.form-group { margin-bottom: 18px; }
+
+.field-label {
+  display: block;
+  font-size: .78rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+  color: rgba(244,237,224,.65); margin-bottom: 8px;
+}
+
+.input-field {
+  width: 100%;
+  padding: 14px 18px;
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,.14);
+  border-radius: 16px;
+  color: #111111;
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-size: .93rem;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: border-color .2s, box-shadow .2s, background .2s, transform .15s var(--ease);
+}
+.input-field::placeholder { color: rgba(0,0,0,.35); }
+.input-field:focus {
+  border-color: rgba(0,0,0,.45);
+  box-shadow: 0 0 0 4px rgba(0,0,0,.1);
+  background: rgba(0,0,0,.04);
+  transform: translateY(-1px);
+}
+
+
+.pw-wrap { position: relative; }
+.pw-wrap .input-field { padding-right: 52px; }
+.pw-toggle {
+  position: absolute; top: 50%; right: 14px;
+  transform: translateY(-50%);
+  background: none; border: none; cursor: pointer;
+  font-size: 1.1rem; padding: 4px; opacity: .6;
+  transition: opacity .2s;
+}
+.pw-toggle:hover { opacity: 1; }
+
+
+.forgot-row {
+  display: flex; justify-content: flex-end;
+  margin-top: 8px; margin-bottom: 4px;
+}
+.forgot-link {
+  font-size: .8rem; font-weight: 700;
+  color: rgba(232, 25, 25, 0.7); text-decoration: none;
+  transition: color .2s;
+}
+.forgot-link:hover { color: green; }
+
+
+.submit-btn {
+  width: 100%; border: none; border-radius: 999px;
+  padding: 16px 20px; margin-top: 14px;
+  background: #1a6b2f;
+  color: #ffffff;
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-size: 1rem; font-weight: 800; letter-spacing: .01em;
+  cursor: pointer;
+  transition: transform .2s var(--ease), box-shadow .2s;
+  position: relative; overflow: hidden;
+}
+.submit-btn::after {
+  content: ""; position: absolute; inset: 0;
+  background: rgba(255,255,255,0); transition: background .2s;
+}
+.submit-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 36px rgba(0,0,0,.5);
+}
+.submit-btn:hover::after { background: rgba(255,255,255,.12); }
+.submit-btn:active { transform: translateY(0); }
+
+.form-divider {
+  display: flex; align-items: center; gap: 14px;
+  margin: 22px 0;
+}
+.form-divider::before,
+.form-divider::after {
+  content: ""; flex: 1; height: 1px;
+  background: rgba(0,0,0,.1);
+}
+.form-divider span { font-size: .75rem; color: var(--fog3); white-space: nowrap; }
+
+
+.register-line {
+  text-align: center; font-size: .88rem; color: var(--fog3);
+}
+.register-line a {
+  color: #1a6b2f; font-weight: 800; text-decoration: none;
+  transition: opacity .2s;
+}
+.register-line a:hover { opacity: .75; }
+
+
+.trust-bar {
+  display: flex; align-items: center; justify-content: center;
+  gap: 20px; margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(0,0,0,.08);
+}
+.trust-item {
+  display: flex; align-items: center; gap: 6px;
+  font-size: .75rem; color: var(--fog3);
+}
+.trust-item span { font-size: .9rem; }
+
+
+@media (max-width: 960px) {
+  .lg-page { grid-template-columns: 1fr; }
+  .lg-left { clip-path: none; padding: 52px 32px 48px; }
+  .lg-right { padding: 48px 32px 60px; }
+  .lg-headline { font-size: 2.8rem; }
+}
+
+@media (max-width: 600px) {
+  .lg-left, .lg-right { padding: 40px 24px; }
+  .lg-headline { font-size: 2.2rem; }
+  .form-title { font-size: 2rem; }
+  .lg-stats { gap: 20px; }
+  
+}
+</style>
+
+
+<canvas id="lg-canvas"></canvas>
+
+
+<div class="blobs">
+  <div class="blob"></div>
+  <div class="blob"></div>
+  <div class="blob"></div>
+</div>
+
+<div class="lg-page">
+
+
+  <div class="lg-left">
+    <div class="lg-left-bg">
+      <img src="https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=1200&q=75" alt="Farm background" />
+    </div>
+
+    <div class="lg-left-content">
+      <div class="eyebrow-pill"><span></span>FarmDirect Access</div>
+
+      <h1 class="lg-headline">
+        Welcome<br>back to the
+        <em>farm.</em>
+      </h1>
+
+      <p class="lg-sub">
+        Sign in and pick up right where you left off whether you're
+        managing your harvest or stocking up your kitchen.
+      </p>
+
+      <div class="access-cards">
+        <div class="access-card">
+          <div class="access-card-header">
+            <div class="access-icon"><i class="fa-solid fa-leaf"></i></div>
+            <div class="access-card-title">For Farmers</div>
+          </div>
+          <p>Add products, update stock, manage listings, and monitor customer orders  all in one place.</p>
+        </div>
+        <div class="access-card">
+          <div class="access-card-header">
+            <div class="access-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+            <div class="access-card-title">For Customers</div>
+          </div>
+          <p>Browse fresh produce, track orders, and keep shopping directly from verified local farms.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="lg-left-content">
+      <div class="lg-stats">
+        <div>
+          <div class="lg-stat-num">500+</div>
+          <div class="lg-stat-label">Weekly listings</div>
+        </div>
+        <div>
+          <div class="lg-stat-num">120+</div>
+          <div class="lg-stat-label">Verified farmers</div>
+        </div>
+        <div>
+          <div class="lg-stat-num">24h</div>
+          <div class="lg-stat-label">Avg delivery</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+ 
+  <div class="lg-right">
+    <div class="lg-form-box">
+
+      <div class="form-kicker">Welcome Back</div>
+      <h2 class="form-title">Login<br><em>back in.</em></h2>
+      <p class="form-subtitle">Enter your details and get back to what matters.</p>
+
+     
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert {% if message.tags == 'error' %}alert-error{% else %}alert-success{% endif %}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <form method="POST">
+        {% csrf_token %}
+
+        <div class="form-group">
+          <label class="field-label">Username</label>
+          <input class="input-field" type="text" name="username" placeholder="Enter your username" required autocomplete="username" />
+        </div>
+
+        <div class="form-group">
+          <label class="field-label">Password</label>
+          <div class="pw-wrap">
+            <input class="input-field" type="password" name="password" id="lg-password" placeholder="Enter your password" required autocomplete="current-password" />
+            <button type="button" class="pw-toggle" id="pw-btn" onclick="togglePw()">😎</button>
+          </div>
+          <div class="forgot-row">
+            <a class="forgot-link" href="{% url 'password_reset' %}">Forgot password?</a>
+          </div>
+        </div>
+
+        <button class="submit-btn" type="submit">
+          Login to FarmDirect 
+        </button>
+      </form>
+
+      <div class="form-divider"><span>new here?</span></div>
+
+      <div class="register-line">
+        Don't have an account? <a href="{% url 'register' %}">Create one </a>
+      </div>
+
+      <div class="trust-bar">
+        <div class="trust-item"><span><i class="fa-solid fa-shield-halved"></i></span> Secure</div>
+        <div class="trust-item"><span><i class="fa-solid fa-heart-circle-check"></i></span> Verified farmers</div>
+        <div class="trust-item"><span><i class="fa-brands fa-pagelines"></i></span> Always fresh</div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+
+
+const cv = document.getElementById('lg-canvas');
+if (cv) {
+  const cx = cv.getContext('2d');
+  let W = cv.width = window.innerWidth, H = cv.height = window.innerHeight;
+  window.addEventListener('resize', () => { W = cv.width = window.innerWidth; H = cv.height = window.innerHeight; });
+  const C = ['rgba(184,224,90,', 'rgba(90,158,48,', 'rgba(232,200,74,'];
+  const pts = Array.from({length: 50}, () => ({
+    x: Math.random()*W, y: Math.random()*H,
+    r: Math.random()*1.6+0.3,
+    vx: (Math.random()-.5)*.25, vy: (Math.random()-.5)*.25,
+    c: C[Math.floor(Math.random()*3)], a: Math.random()*.4+0.1
+  }));
+  (function draw() {
+    cx.clearRect(0,0,W,H);
+    pts.forEach(p => {
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<0)p.x=W; if(p.x>W)p.x=0;
+      if(p.y<0)p.y=H; if(p.y>H)p.y=0;
+      cx.beginPath(); cx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      cx.fillStyle=p.c+p.a+')'; cx.fill();
+    });
+    requestAnimationFrame(draw);
+  })();
+}
+function togglePw() {
+  const inp = document.getElementById('lg-password');
+  const btn = document.getElementById('pw-btn');
+  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '😍'; }
+  else { inp.type = 'password'; btn.textContent = '😎'; }
+}
+</script>
+
+{% endblock %}

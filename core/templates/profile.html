@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% block title %}My Profile — FarmDirect{% endblock %}
+{% block content %}
+<div class="container">
+
+  <div class="page-header" style="background:none;border:none;padding:28px 0 20px;">
+    <div class="page-title">
+      <span class="title-icon"><i class="fa-solid fa-user"></i></span>
+      My Profile
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:300px 1fr;gap:28px;align-items:start;">
+
+    <!-- LEFT — Avatar + quick info -->
+    <div>
+      <div class="card">
+        <div class="card-body" style="text-align:center;padding:32px 24px;">
+          <div style="position:relative;display:inline-block;margin-bottom:20px;">
+            {% if user.profile_pic %}
+              <img src="{{ user.profile_pic.url }}" alt="Profile"
+                   style="width:110px;height:110px;border-radius:50%;object-fit:cover;border:4px solid var(--green-light);box-shadow:0 4px 16px rgba(22,163,74,.2);">
+            {% else %}
+              <div style="width:110px;height:110px;border-radius:50%;background:linear-gradient(135deg,var(--green),#22c55e);display:flex;align-items:center;justify-content:center;font-size:2.8rem;font-weight:800;color:white;margin:0 auto;box-shadow:0 4px 16px rgba(22,163,74,.25);">
+                {{ user.username|first|upper }}
+              </div>
+            {% endif %}
+            <a href="{% url 'edit_profile' %}"
+               style="position:absolute;bottom:2px;right:2px;width:32px;height:32px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:.75rem;box-shadow:0 2px 8px rgba(0,0,0,.25);text-decoration:none;">
+              <i class="fa-solid fa-pen"></i>
+            </a>
+          </div>
+
+          <div style="font-size:1.2rem;font-weight:800;color:var(--gray-900);margin-bottom:2px;">
+            {{ user.get_full_name|default:user.username }}
+          </div>
+          <div style="font-size:.82rem;color:var(--gray-500);margin-bottom:10px;">@{{ user.username }}</div>
+          <span class="nav-role-pill role-{{ user.role }}" style="font-size:.8rem;padding:4px 14px;">
+            {{ user.role|capfirst }}
+          </span>
+
+          {% if user.bio %}
+            <p style="margin-top:16px;font-size:.85rem;color:var(--gray-600);line-height:1.7;">{{ user.bio }}</p>
+          {% endif %}
+
+          <a href="{% url 'edit_profile' %}" class="btn btn-primary btn-sm" style="margin-top:20px;width:100%;">
+            <i class="fa-solid fa-pen-to-square"></i> Edit Profile
+          </a>
+        </div>
+      </div>
+
+      <!-- Quick links -->
+      <div class="card" style="margin-top:16px;">
+        <div class="card-body" style="padding:8px 0;">
+          <a href="{% url 'settings' %}" class="nav-dd-item" style="padding:12px 20px;">
+            <i class="fa-solid fa-gear" style="color:var(--gray-400);width:18px;"></i> Settings
+          </a>
+          <a href="{% url 'support' %}" class="nav-dd-item" style="padding:12px 20px;">
+            <i class="fa-solid fa-headset" style="color:var(--gray-400);width:18px;"></i> Customer Support
+          </a>
+          <a href="{% url 'about' %}" class="nav-dd-item" style="padding:12px 20px;">
+            <i class="fa-solid fa-circle-info" style="color:var(--gray-400);width:18px;"></i> About FarmDirect
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT — Details -->
+    <div style="display:flex;flex-direction:column;gap:20px;">
+
+      <!-- Personal Info -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="fa-solid fa-id-card" style="color:var(--green)"></i> Personal Information</div>
+          <a href="{% url 'edit_profile' %}" class="btn btn-secondary btn-sm">
+            <i class="fa-solid fa-pen"></i> Edit
+          </a>
+        </div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+            <div>
+              <div style="font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-400);margin-bottom:4px;">First Name</div>
+              <div style="font-weight:600;color:var(--gray-800);">{{ user.first_name|default:"—" }}</div>
+            </div>
+            <div>
+              <div style="font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-400);margin-bottom:4px;">Last Name</div>
+              <div style="font-weight:600;color:var(--gray-800);">{{ user.last_name|default:"—" }}</div>
+            </div>
+            <div>
+              <div style="font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-400);margin-bottom:4px;">Email</div>
+              <div style="font-weight:600;color:var(--gray-800);">{{ user.email|default:"—" }}</div>
+            </div>
+            <div>
+              <div style="font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-400);margin-bottom:4px;">Phone</div>
+              <div style="font-weight:600;color:var(--gray-800);">{{ user.phone|default:"—" }}</div>
+            </div>
+            <div style="grid-column:span 2;">
+              <div style="font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-400);margin-bottom:4px;">Address</div>
+              <div style="font-weight:600;color:var(--gray-800);">{{ user.address|default:"—" }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Account Info -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="fa-solid fa-shield-halved" style="color:var(--green)"></i> Account Details</div>
+        </div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+            <div>
+              <div style="font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-400);margin-bottom:4px;">Username</div>
+              <div style="font-weight:600;color:var(--gray-800);">{{ user.username }}</div>
+            </div>
+            <div>
+              <div style="font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-400);margin-bottom:4px;">Role</div>
+              <span class="badge badge-green">{{ user.role|capfirst }}</span>
+            </div>
+            <div>
+              <div style="font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-400);margin-bottom:4px;">Member Since</div>
+              <div style="font-weight:600;color:var(--gray-800);">{{ user.date_joined|date:"d M Y" }}</div>
+            </div>
+            <div>
+              <div style="font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-400);margin-bottom:4px;">Last Login</div>
+              <div style="font-weight:600;color:var(--gray-800);">{{ user.last_login|date:"d M Y, H:i"|default:"—" }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+        {% if user.is_farmer %}
+          <div class="stat-card">
+            <div class="stat-icon stat-green"><i class="fa-solid fa-box-open"></i></div>
+            <div><div class="stat-value">{{ user.products.count }}</div><div class="stat-label">Products</div></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon stat-blue"><i class="fa-solid fa-receipt"></i></div>
+            <div><div class="stat-value">{{ user.earnings.count }}</div><div class="stat-label">Orders Sold</div></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon stat-amber"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+            <div><div class="stat-value">{{ user.support_tickets.count }}</div><div class="stat-label">Support Tickets</div></div>
+          </div>
+        {% else %}
+          <div class="stat-card">
+            <div class="stat-icon stat-blue"><i class="fa-solid fa-bag-shopping"></i></div>
+            <div><div class="stat-value">{{ user.orders.count }}</div><div class="stat-label">Orders</div></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon stat-amber"><i class="fa-solid fa-bell"></i></div>
+            <div><div class="stat-value">{{ user.notifications.count }}</div><div class="stat-label">Notifications</div></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon stat-purple"><i class="fa-solid fa-headset"></i></div>
+            <div><div class="stat-value">{{ user.support_tickets.count }}</div><div class="stat-label">Tickets</div></div>
+          </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

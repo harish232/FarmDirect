@@ -1,0 +1,418 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  
+  --void:   white;
+  --charcoal:#0b353a;
+  --iron:    #eaea29;
+  --steel:   #d27c14;
+  --silver:  #14a0c0;
+  --mist:    #95bbd4;
+  --snow:    #0d1e32;
+  --glass: #14a0c0  ;
+  --border:  #14a0c0;
+}
+
+body { background: var(--void); }
+
+.earn-root {
+  min-height: 100vh;
+  background: var(--void);
+  background-image:
+    radial-gradient(ellipse 70% 55% at 12% 6%,  rgba(160,160,180,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 70% at 88% 92%, rgba(100,100,130,0.05) 0%, transparent 55%);
+  font-family: 'DM Sans', sans-serif;
+  padding: 40px 24px 80px;
+  position: relative;
+  overflow-x: hidden;
+}
+
+#particleCanvas {
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 0;
+}
+
+.earn-inner {
+  position: relative; z-index: 1;
+  max-width: 1180px; margin: 0 auto;
+}
+
+
+.earn-topbar {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 40px;
+  opacity: 0;
+  animation: riseIn 0.7s cubic-bezier(.22,.68,0,1.2) 0.05s forwards;
+}
+
+.earn-title-wrap { flex: 1; }
+
+.earn-eyebrow {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--silver); display: block; margin-bottom: 8px;
+}
+
+.earn-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(28px, 3.5vw, 40px);
+  font-weight: 900; color: var(--snow); line-height: 1.08;
+}
+.earn-title em {
+  font-style: italic;
+  background: linear-gradient(135deg, var(--mist), var(--silver));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.earn-badge {
+  padding: 8px 16px; border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.847);
+  background: rgba(234, 235, 234, 0.925);
+  color:black;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  white-space: nowrap;
+}
+
+
+.earn-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+  opacity: 0;
+  animation: riseIn 0.75s cubic-bezier(.22,.68,0,1.2) 0.18s forwards;
+}
+
+.stat-card {
+  background: var(--charcoal);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 26px 22px;
+  position: relative; overflow: hidden;
+  transition: transform .25s, border-color .25s, box-shadow .25s;
+  cursor: default;
+}
+.stat-card:hover {
+  transform: translateY(-4px);
+  border-color: rgb(150, 46, 46);
+  box-shadow: 0 24px 48px rgba(0,0,0,0.44);
+}
+
+
+.stat-card::before {
+  content: ""; position: absolute;
+  top: 0; left: 0; right: 0; height: 2px;
+  border-radius: 22px 22px 0 0;
+}
+.stat-card.c1::before { background: linear-gradient(90deg, #3d9b6e, #74d4a2); }
+.stat-card.c2::before { background: linear-gradient(90deg, #d4934a, #f5c67e); }
+.stat-card.c3::before { background: linear-gradient(90deg, #5b8dee, #8ab4ff); }
+
+.stat-orb {
+  position: absolute; width: 100px; height: 100px;
+  border-radius: 50%; top: -30px; right: -25px; opacity: 0.07;
+}
+.c1 .stat-orb { background: #3d9b6e; }
+.c2 .stat-orb { background: #d4934a; }
+.c3 .stat-orb { background: #5b8dee; }
+
+.stat-icon {
+  font-size: 24px; margin-bottom: 14px; display: block;
+}
+
+.stat-lbl {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: rgba(231, 231, 237, 0.873); margin-bottom: 10px;
+}
+
+.stat-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 32px; font-weight: 700;
+  color:white; line-height: 1;
+}
+
+.stat-sub {
+  font-size: 12px; color: rgba(243, 243, 247, 0.967);
+  margin-top: 8px; line-height: 1.5;
+}
+
+
+.earn-section {
+  opacity: 0;
+  animation: riseIn 0.78s cubic-bezier(.22,.68,0,1.2) 0.32s forwards;
+}
+
+.section-header {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 18px;
+}
+
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px; font-weight: 700;
+  color: var(--snow);
+}
+
+.section-count {
+  padding: 5px 12px; border-radius: 999px;
+  background: rgba(160,160,180,0.10);
+  border: 1px solid rgba(160,160,180,0.14);
+  color: var(--silver);
+  font-size: 12px; font-weight: 700;
+}
+
+.table-card {
+  background: var(--charcoal);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 32px 64px rgba(0,0,0,0.45);
+}
+
+.earn-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: black;
+}
+
+.earn-table thead tr {
+  background: var(--iron);
+  border-bottom: 1px solid var(--border);
+}
+
+.earn-table thead th {
+  padding: 14px 18px;
+  font-size: 11px; font-weight: 700;
+  color: rgba(9, 9, 9, 0.46);
+  letter-spacing: 0.12em; text-transform: uppercase;
+  text-align: left; white-space: nowrap;
+}
+
+.earn-table tbody tr {
+  border-bottom: 1px solid red(136, 12, 12, 0.04);
+  transition: background .18s;
+}
+.earn-table tbody tr:last-child { border-bottom: none; }
+.earn-table tbody tr:hover { background: rgba(107, 51, 51, 0.025); }
+
+.earn-table tbody td {
+  padding: 14px 18px;
+  font-size: 13.5px;
+  color: rgba(2, 2, 19, 0.75);
+  vertical-align: middle;
+}
+
+
+.td-id {
+  font-weight: 700; font-size: 12px;
+  color: var(--silver) !important;
+}
+
+.td-product { font-weight: 600; color: var(--snow) !important; }
+
+.td-amount { color: rgba(200,200,216,0.65) !important; }
+
+.td-fee { color: rgba(245,140,140,0.70) !important; font-size: 12.5px !important; }
+
+.td-net {
+  font-family: 'Playfair Display', serif;
+  font-size: 16px !important;
+  font-weight: 700;
+  color: var(--mist) !important;
+}
+
+.td-date { font-size: 12px !important; color: rgba(200,200,216,0.38) !important; }
+
+
+.st-paid {
+  display: inline-block; padding: 4px 12px;
+  border-radius: 999px; font-size: 11px; font-weight: 700;
+  background: rgba(61,155,110,0.15); color: #74d4a2;
+  border: 1px solid rgba(61,155,110,0.25);
+}
+.st-pending {
+  display: inline-block; padding: 4px 12px;
+  border-radius: 999px; font-size: 11px; font-weight: 700;
+  background: rgba(212,147,74,0.15); color: #f5c67e;
+  border: 1px solid rgba(212,147,74,0.25);
+}
+
+
+.empty-state {
+  padding: 60px 20px;
+  text-align: center;
+  color: rgba(200,200,216,0.28);
+}
+.empty-state span { font-size: 40px; display: block; margin-bottom: 14px; }
+.empty-state p { font-size: 14px; line-height: 1.7; }
+.empty-state strong { color: var(--silver); }
+
+
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+
+@media (max-width: 860px) {
+  .earn-stats { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 560px) {
+  .earn-stats { grid-template-columns: 1fr; }
+  .earn-root  { padding: 24px 14px 60px; }
+  .earn-table thead th,
+  .earn-table tbody td { padding: 10px 12px; }
+}
+</style>
+
+<canvas id="particleCanvas"></canvas>
+
+<div class="earn-root">
+  <div class="earn-inner">
+
+  
+    <div class="earn-topbar">
+      <div class="earn-title-wrap">
+        <span class="earn-eyebrow"><h3></h3></span>
+        <h1 class="earn-title">My <em>Earnings</em></h1>
+      </div>
+      <div class="earn-badge">💰 Payout Overview</div>
+    </div>
+
+   
+    <div class="earn-stats">
+      <div class="stat-card c1">
+        <div class="stat-orb"></div>
+        <span class="stat-icon">💰</span>
+        <div class="stat-lbl">Total Earned</div>
+        <div class="stat-num">₹{{ total_earned|floatformat:2 }}</div>
+        <div class="stat-sub">Gross earnings across all orders</div>
+      </div>
+      <div class="stat-card c2">
+        <div class="stat-orb"></div>
+        <span class="stat-icon">⏳</span>
+        <div class="stat-lbl">Pending Payout</div>
+        <div class="stat-num">₹{{ pending_payout|floatformat:2 }}</div>
+        <div class="stat-sub">Awaiting settlement to your account</div>
+      </div>
+      <div class="stat-card c3">
+        <div class="stat-orb"></div>
+        <span class="stat-icon">🏛️</span>
+        <div class="stat-lbl">Platform Fee</div>
+        <div class="stat-num">10%</div>
+        <div class="stat-sub">Deducted per order before payout</div>
+      </div>
+    </div>
+
+    
+    <div class="earn-section">
+      <div class="section-header">
+        <h2 class="section-title">Earnings History</h2>
+        <span class="section-count">{{ earnings|length }} record{{ earnings|length|pluralize }}</span>
+      </div>
+
+      <div class="table-card">
+        <table class="earn-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Product</th>
+              <th>Order Amount</th>
+              <th>Platform Fee</th>
+              <th>Net Amount</th>
+              <th>Status</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for e in earnings %}
+            <tr>
+              <td class="td-id">#{{ e.order.id }}</td>
+              <td class="td-product">{{ e.order.product.name }}</td>
+              <td class="td-amount">₹{{ e.amount }}</td>
+              <td class="td-fee">−₹{{ e.platform_fee }}</td>
+              <td class="td-net">₹{{ e.net_amount }}</td>
+              <td>
+                {% if e.is_paid %}
+                  <span class="st-paid">Paid</span>
+                {% else %}
+                  <span class="st-pending">Pending</span>
+                {% endif %}
+              </td>
+              <td class="td-date">{{ e.created_at|date:"d M Y" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7">
+                <div class="empty-state">
+                  <span>📭</span>
+                  <p>No earnings yet.<br><strong>Start selling to see your payouts here.</strong></p>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function() {
+  const canvas = document.getElementById('particleCanvas');
+  const ctx    = canvas.getContext('2d');
+  let W, H, particles = [];
+  const COUNT = 30;
+
+  function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+  function rand(a,b) { return a + Math.random()*(b-a); }
+
+  function spawn() {
+    return {
+      x: rand(0,W), y: rand(-40,H+40),
+      r: rand(1,3.5),
+      vx: rand(-0.18,0.18), vy: rand(-0.45,-0.12),
+      alpha: rand(0.06,0.28),
+      pulse: rand(0,Math.PI*2), pv: rand(0.012,0.025)
+    };
+  }
+
+  function init() {
+    resize();
+    particles = Array.from({length:COUNT}, spawn);
+    particles.forEach(p => { p.y = rand(0,H); });
+  }
+
+  function draw() {
+    ctx.clearRect(0,0,W,H);
+    particles.forEach(p => {
+      p.pulse += p.pv;
+      const a = p.alpha * (0.65 + 0.35*Math.sin(p.pulse));
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle = `rgba(180,180,200,${a})`; ctx.fill();
+      p.x += p.vx; p.y += p.vy;
+      if (p.y < -20) { Object.assign(p,spawn()); p.y = H+10; }
+      if (p.x < -10)  p.x = W+10;
+      if (p.x > W+10) p.x = -10;
+    });
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize);
+  init(); draw();
+})();
+</script>
+
+{% endblock %}

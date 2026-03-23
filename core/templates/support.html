@@ -1,0 +1,344 @@
+{% extends 'base.html' %}
+{% block title %}Customer SupportFarmDirect{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── PAGE ── */
+.sup-hero {
+  background: linear-gradient(135deg, #16a34a 0%, #8989d3 100%);
+  border-radius: 16px;
+  padding: 36px 40px;
+  color: rgb(255, 255, 255);
+  margin-bottom: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.sup-hero-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 6px; }
+.sup-hero-sub { font-size: .9rem; opacity: .85; line-height: 1.7; }
+.sup-hero-emoji { font-size: 4rem; flex-shrink: 0; }
+
+/* ── HELP CARDS ── */
+.help-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-bottom: 32px;
+}
+.help-card {
+  background: white;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  padding: 20px 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,.07);
+}
+.help-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+}
+.help-card.active { border-color: #16a34a; background: #f0fdf4; }
+.help-emoji { font-size: 2rem; margin-bottom: 10px; }
+.help-title { font-weight: 700; font-size: .85rem; color: #1f2937; margin-bottom: 4px; }
+.help-desc { font-size: .72rem; color: #6b7280; line-height: 1.5; }
+
+/* ── MAIN GRID ── */
+.sup-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 24px;
+  align-items: start;
+}
+
+/* ── FORM ── */
+.sup-form-card { border-radius: 14px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+.sup-form-header {
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 18px 24px;
+  font-weight: 700; font-size: 1rem; color: #1f2937;
+  display: flex; align-items: center; gap: 10px;
+}
+.sup-form-body { background: white; padding: 24px; }
+
+/* ── TICKET TABLE ── */
+.ticket-card { margin-top: 20px; border-radius: 14px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+.ticket-header {
+  background: #f9fafb; border-bottom: 1px solid #e5e7eb;
+  padding: 16px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  font-weight: 700; color: #1f2937;
+}
+
+/* ── SIDEBAR CARDS ── */
+.side-card { background: white; border-radius: 14px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.08); margin-bottom: 20px; }
+.side-header { background: #f9fafb; border-bottom: 1px solid #e5e7eb; padding: 16px 20px; font-weight: 700; font-size: .95rem; color: #1f2937; display: flex; align-items: center; gap: 8px; }
+
+/* ── FAQ ── */
+.faq-item { border-bottom: 1px solid #f3f4f6; cursor: pointer; }
+.faq-item:last-child { border-bottom: none; }
+.faq-item:hover { background: #f9fafb; }
+.faq-q { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; font-size: .86rem; font-weight: 600; color: #374151; }
+.faq-arrow { font-size: .8rem; color: #9ca3af; transition: transform .2s; display: inline-block; }
+.faq-a { display: none; padding: 0 20px 14px; font-size: .82rem; color: #6b7280; line-height: 1.7; }
+.faq-item.open .faq-a { display: block; }
+.faq-item.open .faq-arrow { transform: rotate(180deg); }
+
+/* ── CONTACT ── */
+.contact-row { display: flex; align-items: center; gap: 14px; padding: 14px 20px; border-bottom: 1px solid #f3f4f6; }
+.contact-row:last-child { border-bottom: none; }
+.contact-badge { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+.contact-lbl { font-size: .68rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #9ca3af; margin-bottom: 2px; }
+.contact-val { font-weight: 700; color: #1f2937; font-size: .88rem; }
+.contact-sub { font-size: .73rem; color: #6b7280; }
+
+/* ── MISC ── */
+.info-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 12px 16px; margin-bottom: 18px; font-size: .82rem; color: #166534; display: flex; gap: 10px; align-items: flex-start; line-height: 1.7; }
+.empty-box { text-align: center; padding: 40px 24px; color: #9ca3af; }
+.empty-box .e-emoji { font-size: 2.5rem; margin-bottom: 12px; }
+.empty-box h3 { font-size: 1rem; color: #6b7280; margin-bottom: 6px; }
+.empty-box p { font-size: .82rem; }
+
+@media(max-width: 900px) {
+  .help-grid { grid-template-columns: repeat(3, 1fr); }
+  .sup-grid { grid-template-columns: 1fr; }
+  .sup-hero { flex-direction: column; text-align: center; }
+}
+@media(max-width: 560px) {
+  .help-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <!-- Hero -->
+  <div class="sup-hero">
+    <div>
+      <div class="sup-hero-title">Customer Support</div>
+      <div class="sup-hero-sub">We are here to help! Submit a ticket and our team<br>will respond within 24 hours.</div>
+    </div>
+    <div class="sup-hero-emoji">🎧</div>
+  </div>
+
+  <!-- 5 Category Cards -->
+  <div class="help-grid">
+    <div class="help-card" id="card-order" onclick="selectCategory('order', this)">
+      <div class="help-emoji">🧾</div>
+      <div class="help-title">Order Issues</div>
+      <div class="help-desc">Problems with orders &amp; tracking</div>
+    </div>
+    <div class="help-card" id="card-payment" onclick="selectCategory('payment', this)">
+      <div class="help-emoji">💳</div>
+      <div class="help-title">Payment Help</div>
+      <div class="help-desc">Failures, refunds &amp; billing</div>
+    </div>
+    <div class="help-card" id="card-delivery" onclick="selectCategory('delivery', this)">
+      <div class="help-emoji">🚚</div>
+      <div class="help-title">Delivery Support</div>
+      <div class="help-desc">Delays or missing packages</div>
+    </div>
+    <div class="help-card" id="card-product" onclick="selectCategory('product', this)">
+      <div class="help-emoji">📦</div>
+      <div class="help-title">Product Quality</div>
+      <div class="help-desc">Quality complaints &amp; returns</div>
+    </div>
+    <div class="help-card" id="card-account" onclick="selectCategory('account', this)">
+      <div class="help-emoji">👤</div>
+      <div class="help-title">Account Help</div>
+      <div class="help-desc">Login issues &amp; settings</div>
+    </div>
+  </div>
+
+  <!-- Main Grid -->
+  <div class="sup-grid">
+
+    <!-- LEFT: Form + Ticket History -->
+    <div>
+
+      <!-- Ticket Form -->
+      <div class="sup-form-card">
+        <div class="sup-form-header">
+          📩 Submit a Support Ticket
+        </div>
+        <div class="sup-form-body">
+          <form method="POST">
+            {% csrf_token %}
+
+            <div class="form-group">
+              <label>Category</label>
+              <select name="category" id="category-select" class="form-control">
+                <option value="order">🧾 Order Issue</option>
+                <option value="payment">💳 Payment Problem</option>
+                <option value="product">📦 Product Quality</option>
+                <option value="delivery">🚚 Delivery Issue</option>
+                <option value="account">👤 Account Problem</option>
+                <option value="other">💬 Other</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Subject</label>
+              <input type="text" name="subject" class="form-control"
+                     id="subject-input"
+                     placeholder="Briefly describe your issue…"
+                     required maxlength="200">
+            </div>
+
+            <div class="form-group">
+              <label>Message</label>
+              <textarea name="message" class="form-control" rows="5"
+                        placeholder="Describe your issue in detail. Include order numbers, dates, or relevant info…"
+                        required></textarea>
+            </div>
+
+            <div class="info-box">
+              ⏱️ <div>Our team responds within <strong>24 hours</strong>. Urgent? Call <strong>1800-FARM-123</strong> (Mon–Sat 9AM–6PM).</div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width:100%;font-size:.95rem;padding:13px;">
+              📩 Submit Ticket
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Ticket History -->
+      {% if tickets %}
+      <div class="ticket-card">
+        <div class="ticket-header">
+          <span>📋 My Support Tickets</span>
+          <span class="badge badge-blue">{{ tickets.count }} ticket{{ tickets.count|pluralize }}</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Subject</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for t in tickets %}
+              <tr>
+                <td style="font-weight:600;color:#6b7280;font-size:.8rem;">#{{ t.id }}</td>
+                <td>
+                  <div style="font-weight:600;color:#1f2937;font-size:.88rem;">{{ t.subject }}</div>
+                  <div style="font-size:.75rem;color:#9ca3af;margin-top:2px;">{{ t.message|truncatechars:55 }}</div>
+                </td>
+                <td><span class="badge badge-gray">{{ t.get_category_display }}</span></td>
+                <td>
+                  {% if t.status == 'open' %}<span class="badge badge-blue">Open</span>
+                  {% elif t.status == 'in_progress' %}<span class="badge badge-amber">In Progress</span>
+                  {% elif t.status == 'resolved' %}<span class="badge badge-green">Resolved</span>
+                  {% else %}<span class="badge badge-gray">Closed</span>{% endif %}
+                </td>
+                <td style="font-size:.8rem;color:#6b7280;">{{ t.created_at|date:"d M Y" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% else %}
+      <div class="ticket-card" style="margin-top:20px;">
+        <div class="empty-box">
+          <div class="e-emoji">🎫</div>
+          <h3>No tickets yet</h3>
+          <p>Submit your first support ticket above — we will get back within 24 hours.</p>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+
+    <!-- RIGHT: FAQ + Contact -->
+    <div>
+
+      <!-- FAQ -->
+      <div class="side-card">
+        <div class="side-header">❓ Quick FAQs</div>
+
+        <div class="faq-item" onclick="toggleFaq(this)">
+          <div class="faq-q"><span>How do I track my order?</span><span class="faq-arrow">▼</span></div>
+          <div class="faq-a">Go to My Orders and click on any order to see real-time status updates from the farmer and delivery partner.</div>
+        </div>
+        <div class="faq-item" onclick="toggleFaq(this)">
+          <div class="faq-q"><span>Can I cancel my order?</span><span class="faq-arrow">▼</span></div>
+          <div class="faq-a">Orders can be cancelled before the farmer confirms them. After confirmation, please contact support for assistance.</div>
+        </div>
+        <div class="faq-item" onclick="toggleFaq(this)">
+          <div class="faq-q"><span>How are refunds processed?</span><span class="faq-arrow">▼</span></div>
+          <div class="faq-a">Refunds are processed within 5–7 business days back to your original payment method.</div>
+        </div>
+        <div class="faq-item" onclick="toggleFaq(this)">
+          <div class="faq-q"><span>How to become a verified farmer?</span><span class="faq-arrow">▼</span></div>
+          <div class="faq-a">Register as a farmer and our team will verify your details within 48 hours. You will get a verified badge.</div>
+        </div>
+        <div class="faq-item" onclick="toggleFaq(this)">
+          <div class="faq-q"><span>Received damaged produce?</span><span class="faq-arrow">▼</span></div>
+          <div class="faq-a">Submit a support ticket with photos. We will arrange a replacement or full refund within 24 hours.</div>
+        </div>
+      </div>
+
+      <!-- Contact -->
+      <div class="side-card">
+        <div class="side-header">📞 Contact Us</div>
+
+        <div class="contact-row">
+          <div class="contact-badge" style="background:#dcfce7;color:#16a34a;">📞</div>
+          <div>
+            <div class="contact-lbl">Helpline</div>
+            <div class="contact-val">1800-FARM-123</div>
+            <div class="contact-sub">Mon–Sat, 9 AM – 6 PM</div>
+          </div>
+        </div>
+
+        <div class="contact-row">
+          <div class="contact-badge" style="background:#dbeafe;color:#2563eb;">✉️</div>
+          <div>
+            <div class="contact-lbl">Email</div>
+            <div class="contact-val">{{ user.email|default:"support@farmdirect.in" }}</div>
+            <div class="contact-sub">Response within 24 hours</div>
+          </div>
+        </div>
+
+        <div class="contact-row">
+          <div class="contact-badge" style="background:#fef3c7;color:#d97706;">💬</div>
+          <div>
+            <div class="contact-lbl">WhatsApp</div>
+            <div class="contact-val">+91 98765 43210</div>
+            <div class="contact-sub">Quick replies via WhatsApp</div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleFaq(el) { el.classList.toggle('open'); }
+
+function selectCategory(cat, cardEl) {
+  // highlight clicked card
+  document.querySelectorAll('.help-card').forEach(c => c.classList.remove('active'));
+  cardEl.classList.add('active');
+  // set select value
+  document.getElementById('category-select').value = cat;
+  // focus subject
+  document.getElementById('subject-input').focus();
+  // smooth scroll to form
+  document.querySelector('.sup-form-card').scrollIntoView({behavior:'smooth', block:'start'});
+}
+</script>
+
+{% endblock %}

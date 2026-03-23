@@ -1,0 +1,569 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --void:   white;
+  --charcoal:#2a3552;
+  --iron:    #2a2a31;
+  --steel:   #3c3c47;
+  --silver:  #a0a0b4;
+  --mist:    #c8c8d8;
+  --snow:    #eeeef4;
+  --border:  rgba(255,255,255,0.06);
+}
+
+body { background: var(--void); }
+
+.sl-root {
+  min-height: 100vh;
+  background: var(--void);
+  background-image:
+    radial-gradient(ellipse 70% 55% at 12% 6%,  rgba(160,160,180,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 70% at 88% 92%, rgba(100,100,130,0.05) 0%, transparent 55%);
+  font-family: 'DM Sans', sans-serif;
+  padding: 40px 24px 80px;
+  position: relative; overflow-x: hidden;
+}
+
+#particleCanvas {
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 0;
+}
+
+.sl-inner {
+  position: relative; z-index: 1;
+  max-width: 1180px; margin: 0 auto;
+}
+
+.sl-hero {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 22px; align-items: center;
+  background: var(--charcoal);
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  padding: 36px 34px;
+  margin-bottom: 20px;
+  position: relative; overflow: hidden;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.50);
+  opacity: 0;
+  animation: riseIn 0.8s cubic-bezier(.22,.68,0,1.2) 0.05s forwards;
+}
+
+.sl-hero::before {
+  content: "";
+  position: absolute; width: 260px; height: 260px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(160,160,200,0.07) 0%, transparent 70%);
+  top: -100px; right: -80px; pointer-events: none;
+}
+.sl-hero::after {
+  content: "";
+  position: absolute; width: 180px; height: 180px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(120,120,160,0.05) 0%, transparent 70%);
+  bottom: -60px; left: -50px; pointer-events: none;
+}
+
+.hero-shimmer {
+  position: absolute; top: 0; left: -100%;
+  width: 55%; height: 100%;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.04) 50%, transparent 60%);
+  animation: shimmerSweep 1.2s 0.75s forwards;
+  pointer-events: none;
+}
+@keyframes shimmerSweep { to { left: 160%; } }
+
+.hero-left, .hero-right { position: relative; z-index: 1; }
+
+.hero-eyebrow {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--silver); display: block; margin-bottom: 16px;
+}
+
+.hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(30px, 4vw, 46px);
+  font-weight: 900; color: var(--snow);
+  line-height: 1.08; margin-bottom: 12px;
+}
+.hero-title em {
+  font-style: italic;
+  background: linear-gradient(135deg, var(--mist), var(--silver));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-text {
+  font-size: 14.5px; line-height: 1.85;
+  color: rgba(200,200,216,0.50);
+  max-width: 500px; margin-bottom: 24px;
+}
+
+.hero-cta { display: flex; gap: 12px; flex-wrap: wrap; }
+
+.btn-cart {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 22px; border-radius: 999px;
+  background: linear-gradient(135deg, var(--iron), var(--steel));
+  color: var(--snow); font-size: 14px; font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 10px 26px rgba(0,0,0,0.32), inset 0 0 0 1px rgba(255,255,255,0.08);
+  transition: transform .2s, box-shadow .2s;
+}
+.btn-cart:hover { transform: translateY(-2px); box-shadow: 0 16px 34px rgba(0,0,0,0.44); }
+
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 18px; border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  color: var(--mist); font-size: 13.5px; font-weight: 600;
+}
+
+.hero-right { display: grid; gap: 14px; }
+
+.hero-mini {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 18px; padding: 18px 20px;
+  transition: border-color .25s;
+}
+.hero-mini:hover { border-color: rgba(160,160,180,0.18); }
+
+.mini-label {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.10em; text-transform: uppercase;
+  color: rgba(200,200,216,0.40); margin-bottom: 8px;
+}
+.mini-value {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px; font-weight: 700;
+  color: var(--snow); margin-bottom: 5px;
+}
+.mini-sub { font-size: 12px; color: rgba(200,200,216,0.42); line-height: 1.55; }
+
+
+.sl-search {
+  background: var(--charcoal);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 18px 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.32);
+  opacity: 0;
+  animation: riseIn 0.75s cubic-bezier(.22,.68,0,1.2) 0.20s forwards;
+}
+
+.search-form {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px; align-items: center;
+}
+
+
+.search-fl { position: relative; }
+.search-input {
+  width: 100%; padding: 14px 16px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.05);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; color: var(--snow);
+  outline: none;
+  transition: border-color .22s, box-shadow .22s, background .22s;
+}
+.search-input::placeholder { color: rgba(200,200,216,0.35); }
+.search-input:focus {
+  border-color: var(--steel);
+  background: rgba(255,255,255,0.07);
+  box-shadow: 0 0 0 4px rgba(60,60,71,0.15);
+}
+
+.btn-search {
+  padding: 13px 22px; border-radius: 999px; border: none;
+  background: linear-gradient(135deg, var(--iron), var(--steel));
+  color: var(--snow);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.28), inset 0 0 0 1px rgba(255,255,255,0.07);
+  transition: transform .2s, box-shadow .2s;
+  white-space: nowrap;
+}
+.btn-search:hover { transform: translateY(-1px); box-shadow: 0 12px 28px rgba(0,0,0,0.40); }
+
+.btn-clear {
+  padding: 12px 18px; border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  color: var(--silver);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 600;
+  text-decoration: none;
+  transition: border-color .2s, color .2s;
+  white-space: nowrap;
+}
+.btn-clear:hover { border-color: var(--silver); color: var(--mist); }
+
+.search-note {
+  font-size: 12.5px; color: rgba(200,200,216,0.34);
+  margin-top: 12px; line-height: 1.6;
+}
+
+
+.sl-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  opacity: 0;
+  animation: riseIn 0.78s cubic-bezier(.22,.68,0,1.2) 0.32s forwards;
+}
+
+.prod-card {
+  background: var(--charcoal);
+  border: 1px solid var(--border);
+  border-radius: 24px; overflow: hidden;
+  box-shadow: 0 20px 44px rgba(0,0,0,0.36);
+  transition: transform .25s, border-color .25s, box-shadow .25s;
+  display: flex; flex-direction: column;
+}
+.prod-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(160,160,180,0.18);
+  box-shadow: 0 32px 64px rgba(0,0,0,0.50);
+}
+
+.prod-media {
+  width: 100%; height: 200px;
+  background: rgba(255,255,255,0.04);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; position: relative; flex-shrink: 0;
+}
+.prod-media img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform .5s ease;
+  filter: brightness(0.82) saturate(0.78);
+}
+.prod-card:hover .prod-media img { transform: scale(1.06); filter: brightness(0.88) saturate(0.84); }
+.prod-media::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(to bottom, transparent 55%, rgba(13,13,15,.65));
+}
+
+.prod-placeholder {
+  font-size: 54px; opacity: 0.55;
+  transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+}
+.prod-card:hover .prod-placeholder { transform: scale(1.10) rotate(-5deg); }
+
+
+.prod-stock-badge {
+  position: absolute; top: 14px; left: 14px; z-index: 2;
+  padding: 5px 12px; border-radius: 999px;
+  font-size: 11px; font-weight: 700;
+  backdrop-filter: blur(10px);
+}
+.sb-good { background: rgba(61,155,110,0.18); color: #74d4a2; border: 1px solid rgba(61,155,110,0.28); }
+.sb-low  { background: rgba(212,147,74,0.18); color: #f5c67e; border: 1px solid rgba(212,147,74,0.28); }
+.sb-out  { background: rgba(212,80,80,0.18);  color: #f58c8c; border: 1px solid rgba(212,80,80,0.28);  }
+
+
+.prod-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+
+.prod-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 19px; font-weight: 700;
+  color: var(--snow); margin-bottom: 4px; line-height: 1.2;
+}
+
+.prod-farmer { font-size: 12px; color: rgba(200,200,216,0.40); margin-bottom: 10px; }
+
+.prod-desc {
+  font-size: 13px; color: rgba(200,200,216,0.40);
+  line-height: 1.75; margin-bottom: 14px;
+  flex: 1; min-height: 52px;
+}
+
+
+.prod-meta {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 8px; margin-bottom: 14px;
+}
+
+.meta-box {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 12px; padding: 10px 12px;
+}
+.meta-label {
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.10em; text-transform: uppercase;
+  color: rgba(200,200,216,0.32); margin-bottom: 4px;
+}
+.meta-value {
+  font-family: 'Playfair Display', serif;
+  font-size: 14px; font-weight: 700; color: var(--mist);
+}
+
+
+.prod-actions {
+  display: flex; gap: 9px; align-items: center;
+}
+
+.price-chip {
+  padding: 11px 13px; border-radius: 13px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  color: var(--mist);
+  font-family: 'Playfair Display', serif;
+  font-size: 14px; font-weight: 700;
+  white-space: nowrap;
+}
+
+.btn-add-cart {
+  flex: 1; text-align: center; text-decoration: none;
+  padding: 12px 14px; border-radius: 999px;
+  background: linear-gradient(135deg, var(--iron), var(--steel));
+  color: var(--snow);
+  font-size: 13.5px; font-weight: 700;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.28), inset 0 0 0 1px rgba(255,255,255,0.07);
+  transition: transform .2s, box-shadow .2s;
+}
+.btn-add-cart:hover { transform: translateY(-2px); box-shadow: 0 14px 28px rgba(0,0,0,0.40); }
+
+.btn-unavailable {
+  flex: 1; text-align: center;
+  padding: 12px 14px; border-radius: 999px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  color: rgba(200,200,216,0.30);
+  font-size: 13.5px; font-weight: 700;
+  cursor: not-allowed;
+}
+
+
+.sl-empty {
+  background: var(--charcoal);
+  border: 1px solid var(--border);
+  border-radius: 26px; padding: 64px 32px;
+  text-align: center;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.45);
+  opacity: 0;
+  animation: riseIn 0.78s cubic-bezier(.22,.68,0,1.2) 0.32s forwards;
+}
+
+.sl-empty-icon { font-size: 54px; display: block; margin-bottom: 18px; }
+.sl-empty h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 26px; font-weight: 700;
+  color: var(--snow); margin-bottom: 12px;
+}
+.sl-empty p {
+  font-size: 14px; color: rgba(200,200,216,0.42);
+  max-width: 420px; margin: 0 auto 26px; line-height: 1.8;
+}
+.btn-clear-search {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 13px 28px; border-radius: 999px;
+  background: linear-gradient(135deg, var(--iron), var(--steel));
+  color: var(--snow); font-size: 14px; font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.32), inset 0 0 0 1px rgba(255,255,255,0.07);
+  transition: transform .2s, box-shadow .2s;
+}
+.btn-clear-search:hover { transform: translateY(-2px); box-shadow: 0 16px 36px rgba(0,0,0,0.42); }
+
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+
+@media (max-width: 1100px) {
+  .sl-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 980px) {
+  .sl-hero { grid-template-columns: 1fr; }
+}
+@media (max-width: 700px) {
+  .sl-grid { grid-template-columns: 1fr; }
+  .search-form { grid-template-columns: 1fr; }
+  .sl-root { padding: 24px 14px 60px; }
+  .sl-hero { padding: 26px 20px; border-radius: 20px; }
+  .hero-title { font-size: 28px; }
+  .prod-actions { flex-direction: column; }
+  .price-chip, .btn-add-cart, .btn-unavailable { width: 100%; }
+}
+</style>
+
+<canvas id="particleCanvas"></canvas>
+
+<div class="sl-root">
+  <div class="sl-inner">
+
+ 
+    <div class="sl-hero">
+      <div class="hero-shimmer"></div>
+
+      <div class="hero-left">
+        <span class="hero-eyebrow">🌿 Farm Fresh Marketplace</span>
+        <h1 class="hero-title">Fresh products, <em>directly from farmers.</em></h1>
+        <p class="hero-text">
+          Browse clean, farm-direct products with transparent pricing and real stock details. No clutter, no confusion just what you need to buy with confidence.
+        </p>
+        <div class="hero-cta">
+          <a href="{% url 'view_cart' %}" class="btn-cart">🛒 View Cart</a>
+          <span class="hero-tag">Fresh stock.Better buying</span>
+        </div>
+      </div>
+
+      <div class="hero-right">
+        <div class="hero-mini">
+          <div class="mini-label">Available Listings</div>
+          <div class="mini-value">{{ products|length }}</div>
+          <div class="mini-sub">Products currently shown based on your search.</div>
+        </div>
+        <div class="hero-mini">
+          <div class="mini-label">Shopping Goal</div>
+          <div class="mini-value">Fresh + Fast</div>
+          <div class="mini-sub">Clear product details help customers buy with confidence.</div>
+        </div>
+      </div>
+    </div>
+
+    
+    <div class="sl-search">
+      <form method="GET" class="search-form">
+        <div class="search-fl">
+          <input
+            type="text" name="q"
+            value="{{ query }}"
+            placeholder="Search tomatoes, spinach, onions..."
+            class="search-input"
+          />
+        </div>
+        <button type="submit" class="btn-search">Search</button>
+        <a href="{% url 'product_list' %}" class="btn-clear">Clear</a>
+      </form>
+      <div class="search-note">
+        Search is fast and instant. Type a product name and results update immediately.
+      </div>
+    </div>
+
+    
+    {% if products %}
+    <div class="sl-grid">
+      {% for product in products %}
+      <div class="prod-card">
+
+        <div class="prod-media">
+          {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+          {% else %}
+            <div class="prod-placeholder">🌾</div>
+          {% endif %}
+
+          {% if product.quantity == 0 %}
+            <div class="prod-stock-badge sb-out"><i class="fa-solid fa-circle-xmark"></i> Out of Stock</div>
+          {% elif product.quantity <= 10 %}
+            <div class="prod-stock-badge sb-low"><i class="fa-solid fa-triangle-exclamation"></i> Low Stock</div>
+          {% else %}
+            <div class="prod-stock-badge sb-good"><i class="fa-solid fa-check"></i> In Stock</div>
+          {% endif %}
+        </div>
+
+     
+        <div class="prod-body">
+          <div class="prod-name">{{ product.name }}</div>
+          <div class="prod-farmer">by {{ product.farmer.username }}</div>
+          <div class="prod-desc">{{ product.description }}</div>
+
+          <div class="prod-meta">
+            <div class="meta-box">
+              <div class="meta-label">Price</div>
+              <div class="meta-value"><i class="fa-solid fa-indian-rupee-sign"></i>{{ product.price }}/{{ product.unit }}</div>
+            </div>
+            <div class="meta-box">
+              <div class="meta-label">Stock</div>
+              <div class="meta-value">{{ product.quantity }} {{ product.unit }}</div>
+            </div>
+          </div>
+
+          <div class="prod-actions">
+            <div class="price-chip"><i class="fa-solid fa-indian-rupee-sign"></i>{{ product.price }}</div>
+            {% if product.quantity == 0 %}
+              <div class="btn-unavailable">Unavailable</div>
+            {% else %}
+              <a href="{% url 'add_to_cart' product.pk %}" class="btn-add-cart">+ Add to Cart</a>
+            {% endif %}
+          </div>
+        </div>
+
+      </div>
+      {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="sl-empty">
+      <span class="sl-empty-icon">🔍</span>
+      <h3>No products found</h3>
+      <p>Nothing matched your search. Try a different term or clear the search to browse all listings.</p>
+      <a href="{% url 'product_list' %}" class="btn-clear-search">Clear Search </a>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<script>
+(function() {
+  const canvas = document.getElementById('particleCanvas');
+  const ctx    = canvas.getContext('2d');
+  let W, H, particles = [];
+  const COUNT = 30;
+
+  function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+  function rand(a,b) { return a + Math.random()*(b-a); }
+
+  function spawn() {
+    return {
+      x: rand(0,W), y: rand(-40,H+40),
+      r: rand(1,3.5),
+      vx: rand(-0.18,0.18), vy: rand(-0.45,-0.12),
+      alpha: rand(0.06,0.28),
+      pulse: rand(0,Math.PI*2), pv: rand(0.012,0.025)
+    };
+  }
+
+  function init() {
+    resize();
+    particles = Array.from({length:COUNT}, spawn);
+    particles.forEach(p => { p.y = rand(0,H); });
+  }
+
+  function draw() {
+    ctx.clearRect(0,0,W,H);
+    particles.forEach(p => {
+      p.pulse += p.pv;
+      const a = p.alpha * (0.65 + 0.35*Math.sin(p.pulse));
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle = `rgba(180,180,200,${a})`; ctx.fill();
+      p.x += p.vx; p.y += p.vy;
+      if (p.y < -20) { Object.assign(p,spawn()); p.y = H+10; }
+      if (p.x < -10)  p.x = W+10;
+      if (p.x > W+10) p.x = -10;
+    });
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize);
+  init(); draw();
+})();
+</script>
+
+{% endblock %}

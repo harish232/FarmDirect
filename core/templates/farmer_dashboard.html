@@ -1,0 +1,591 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  
+  --void:   white;
+  --charcoal:#02181b;
+  --iron:    #eaea29;
+  --steel:   #d27c14;
+  --silver:  #14a0c0;
+  --mist:    #c8c8d8;
+  --snow:    #eeeef4;
+  --glass: #14a0c0  ;
+  --border:  #14a0c0;
+}
+
+
+body { background: var(--void); }
+
+.fd-root {
+  min-height: 100vh;
+  background: var(--void);
+  background-image:
+    radial-gradient(ellipse 70% 55% at 12% 6%,  rgba(160,160,180,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 70% at 88% 92%, rgba(100,100,130,0.05) 0%, transparent 55%);
+  font-family: 'DM Sans', sans-serif;
+  padding: 40px 24px 80px;
+  position: relative;
+  overflow-x: hidden;
+}
+
+#particleCanvas {
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 0;
+}
+
+.fd-inner {
+  position: relative; z-index: 1;
+  max-width: 1180px; margin: 0 auto;
+}
+
+
+.fd-hero {
+  display: grid;
+  grid-template-columns: 1.3fr 0.7fr;
+  gap: 24px;
+  align-items: center;
+  background: var(--charcoal);
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  padding: 38px 36px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 40px 80px rgba(215, 196, 84, 0.5);
+  opacity: 0;
+  animation: riseIn 0.8s cubic-bezier(.22,.68,0,1.2) 0.05s forwards;
+}
+
+
+.fd-hero::before {
+  content: "";
+  position: absolute;
+  width: 260px; height: 260px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(187, 176, 105, 0.07) 0%, transparent 70%);
+  top: -100px; right: -80px;
+  pointer-events: none;
+}
+.fd-hero::after {
+  content: "";
+  position: absolute;
+  width: 180px; height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(120,120,160,0.06) 0%, transparent 70%);
+  bottom: -60px; left: -50px;
+  pointer-events: none;
+}
+
+/* shimmer on load */
+.fd-hero .hero-shimmer {
+  position: absolute;
+  top: 0; left: -100%;
+  width: 55%; height: 100%;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.04) 50%, transparent 60%);
+  animation: shimmerSweep 1.2s 0.8s forwards;
+  pointer-events: none;
+}
+@keyframes shimmerSweep { to { left: 160%; } }
+
+.hero-content, .hero-side { position: relative; z-index: 1; }
+
+.hero-eyebrow {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.20em; text-transform: uppercase;
+  color: var(--silver);
+  display: block; margin-bottom: 16px;
+}
+
+.hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(34px, 4vw, 52px);
+  font-weight: 900;
+  color: var(--snow);
+  line-height: 1.08;
+  margin-bottom: 14px;
+}
+.hero-title em {
+  font-style: italic;
+  background: linear-gradient(135deg, var(--mist), var(--silver));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-text {
+  font-size: 15px; line-height: 1.85;
+  color: rgba(200,200,216,0.52);
+  max-width: 520px;
+  margin-bottom: 28px;
+}
+
+.hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+.btn-hero-primary {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 13px 24px; border-radius: 999px;
+  background: linear-gradient(135deg, var(--iron), var(--steel));
+  color: var(--snow);
+  font-size: 14px; font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(255,255,255,0.08);
+  transition: transform .2s, box-shadow .2s;
+}
+.btn-hero-primary:hover { transform: translateY(-2px); box-shadow: 0 18px 36px rgba(0,0,0,0.45); }
+
+.btn-hero-secondary {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 13px 22px; border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  color: var(--mist);
+  font-size: 14px; font-weight: 700;
+  text-decoration: none;
+  transition: border-color .2s, background .2s, transform .2s;
+}
+.btn-hero-secondary:hover { border-color: var(--silver); background: rgba(255,255,255,0.07); transform: translateY(-2px); }
+
+/* Hero side mini cards */
+.hero-side { display: grid; gap: 14px; }
+
+.hero-mini {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 18px;
+  padding: 18px 20px;
+  backdrop-filter: blur(8px);
+  transition: border-color .25s;
+}
+.hero-mini:hover { border-color: rgba(160,160,180,0.18); }
+
+.mini-label {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.10em; text-transform: uppercase;
+  color: rgba(200,200,216,0.42);
+  margin-bottom: 8px;
+}
+.mini-value {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px; font-weight: 700;
+  color: var(--snow);
+  margin-bottom: 5px;
+}
+.mini-sub { font-size: 12px; color: rgba(200,200,216,0.45); line-height: 1.5; }
+
+
+.fd-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+  opacity: 0;
+  animation: riseIn 0.78s cubic-bezier(.22,.68,0,1.2) 0.20s forwards;
+}
+
+.fd-stat {
+  background: var(--charcoal);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 24px 22px;
+  position: relative; overflow: hidden;
+  transition: transform .25s, border-color .25s, box-shadow .25s;
+  cursor: default;
+}
+.fd-stat:hover { transform: translateY(-4px); border-color: rgba(160,160,180,0.18); box-shadow: 0 24px 48px rgba(0,0,0,0.40); }
+
+.fd-stat::before {
+  content: "";
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 2px; border-radius: 22px 22px 0 0;
+}
+.fd-stat.s1::before { background: linear-gradient(90deg, #5b8dee, #8ab4ff); }
+.fd-stat.s2::before { background: linear-gradient(90deg, #8b6dee, #c3a4ff); }
+.fd-stat.s3::before { background: linear-gradient(90deg, #3d9b6e, #74d4a2); }
+
+.fd-stat-orb {
+  position: absolute; width: 90px; height: 90px;
+  border-radius: 50%; top: -28px; right: -22px; opacity: 0.07;
+}
+.s1 .fd-stat-orb { background: #5b8dee; }
+.s2 .fd-stat-orb { background: #8b6dee; }
+.s3 .fd-stat-orb { background: #3d9b6e; }
+
+.fd-stat-icon {
+  width: 48px; height: 48px;
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.07);
+  margin-bottom: 16px;
+}
+
+.fd-stat-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 34px; font-weight: 700;
+  color: var(--snow); margin-bottom: 6px;
+}
+.fd-stat-lbl {
+  font-size: 14px; font-weight: 700;
+  color: var(--mist); margin-bottom: 6px;
+}
+.fd-stat-desc { font-size: 12.5px; color: rgba(200,200,216,0.38); line-height: 1.6; }
+
+
+.fd-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+  opacity: 0;
+  animation: riseIn 0.78s cubic-bezier(.22,.68,0,1.2) 0.32s forwards;
+}
+
+.action-card {
+  background: var(--charcoal);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 26px 22px;
+  transition: border-color .25s, transform .25s, box-shadow .25s;
+}
+.action-card:hover { border-color: rgba(160,160,180,0.18); transform: translateY(-3px); box-shadow: 0 20px 44px rgba(0,0,0,0.38); }
+
+.action-card h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px; font-weight: 700;
+  color: var(--snow); margin-bottom: 10px;
+}
+.action-card p {
+  font-size: 13.5px; color: rgba(200,200,216,0.46);
+  line-height: 1.75; margin-bottom: 20px; min-height: 50px;
+}
+
+.btn-action-primary {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 11px 20px; border-radius: 999px;
+  background: linear-gradient(135deg, var(--iron), var(--steel));
+  color: var(--snow);
+  font-size: 13px; font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.28), inset 0 0 0 1px rgba(255,255,255,0.07);
+  transition: transform .2s, box-shadow .2s;
+}
+.btn-action-primary:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(0,0,0,0.40); }
+
+.btn-action-secondary {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 11px 18px; border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  color: var(--silver);
+  font-size: 13px; font-weight: 700;
+  text-decoration: none;
+  transition: border-color .2s, color .2s;
+}
+.btn-action-secondary:hover { border-color: var(--silver); color: var(--mist); }
+
+.fd-insight {
+  display: grid;
+  grid-template-columns: 1.08fr 0.92fr;
+  gap: 18px;
+  opacity: 0;
+  animation: riseIn 0.78s cubic-bezier(.22,.68,0,1.2) 0.44s forwards;
+}
+
+.insight-card {
+  background: var(--charcoal);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 28px 26px;
+  transition: border-color .25s;
+}
+.insight-card:hover { border-color: rgba(160,160,180,0.16); }
+
+.sec-kicker {
+  display: inline-block;
+  padding: 6px 13px; border-radius: 999px;
+  background: rgba(160,160,180,0.10);
+  border: 1px solid rgba(160,160,180,0.14);
+  color: var(--silver);
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+.sec-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px; font-weight: 700;
+  color: var(--snow); margin-bottom: 8px;
+}
+
+.sec-text {
+  font-size: 13.5px; color: rgba(200,200,216,0.46);
+  line-height: 1.8; margin-bottom: 20px;
+}
+
+
+.feature-list { display: grid; gap: 12px; }
+
+.feature-item {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.05);
+  transition: border-color .2s, background .2s;
+}
+.feature-item:hover { border-color: rgba(160,160,180,0.14); background: rgba(255,255,255,0.045); }
+
+.feature-icon {
+  width: 40px; height: 40px;
+  border-radius: 12px; flex-shrink: 0;
+  background: rgba(160,160,180,0.10);
+  border: 1px solid rgba(160,160,180,0.13);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+
+.feature-item h4 { font-size: 14px; font-weight: 700; color: var(--snow); margin-bottom: 4px; }
+.feature-item p  { font-size: 12.5px; color: rgba(200,200,216,0.44); line-height: 1.6; }
+
+
+.quick-panel { display: grid; gap: 12px; }
+
+.quick-box {
+  border-radius: 16px;
+  padding: 18px 18px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.05);
+  transition: border-color .2s, background .2s;
+}
+.quick-box:hover { border-color: rgba(160,160,180,0.16); background: rgba(255,255,255,0.045); }
+
+.quick-box h4 { font-size: 14px; font-weight: 700; color: var(--snow); margin-bottom: 6px; }
+.quick-box p  { font-size: 12.5px; color: rgba(200,200,216,0.42); line-height: 1.7; margin-bottom: 10px; }
+
+.quick-box a {
+  text-decoration: none;
+  color: var(--silver);
+  font-size: 12.5px; font-weight: 700;
+  display: inline-flex; align-items: center; gap: 5px;
+  transition: color .2s;
+}
+.quick-box a:hover { color: var(--mist); }
+
+
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+
+@media (max-width: 980px) {
+  .fd-hero    { grid-template-columns: 1fr; }
+  .fd-stats   { grid-template-columns: 1fr 1fr; }
+  .fd-actions { grid-template-columns: 1fr; }
+  .fd-insight { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .fd-stats { grid-template-columns: 1fr; }
+  .fd-root  { padding: 24px 14px 60px; }
+  .fd-hero  { padding: 26px 20px; border-radius: 20px; }
+  .hero-title { font-size: 32px; }
+}
+</style>
+
+<canvas id="particleCanvas"></canvas>
+
+<div class="fd-root">
+  <div class="fd-inner">
+
+    
+    <div class="fd-hero">
+      <div class="hero-shimmer"></div>
+
+      <div class="hero-content">
+        <span class="hero-eyebrow"> Seller Control Panel</span>
+        <h1 class="fd-title hero-title">Farmer <em>Dashboard</em> </h1>
+        <p class="hero-text">
+          Manage products, update listings, and track incoming orders from one place. A farmer dashboard should feel like a working business panel, not three random buttons on a page.
+        </p>
+        <div class="hero-actions">
+          <a href="{% url 'add_product' %}" class="btn-hero-primary">+ Add Product</a>
+          <a href="{% url 'farmer_orders' %}" class="btn-hero-secondary">View Orders</a>
+        </div>
+      </div>
+
+      <div class="hero-side">
+        <div class="hero-mini">
+          <div class="mini-label">Store Status</div>
+          <div class="mini-value">Active</div>
+          <div class="mini-sub">Your seller account is available for listings</div>
+        </div>
+        <div class="hero-mini">
+          <div class="mini-label">Product Visibility</div>
+          <div class="mini-value">{{ user.products.count }} Listed</div>
+          <div class="mini-sub">Keep listings updated and useful</div>
+        </div>
+      </div>
+    </div>
+
+   
+    <div class="fd-stats">
+      <div class="fd-stat s1">
+        <div class="fd-stat-orb"></div>
+        <div class="fd-stat-icon">📦</div>
+        <div class="fd-stat-num">{{ user.products.count }}</div>
+        <div class="fd-stat-lbl">My Products</div>
+        <div class="fd-stat-desc">Total products currently listed under your seller account.</div>
+      </div>
+      <div class="fd-stat s2">
+        <div class="fd-stat-orb"></div>
+        <div class="fd-stat-icon">🧺</div>
+        <div class="fd-stat-num">{{ user.products.count }}</div>
+        <div class="fd-stat-lbl">Listings Live</div>
+        <div class="fd-stat-desc">Active listings visible to buyers right now.</div>
+      </div>
+      <div class="fd-stat s3">
+        <div class="fd-stat-orb"></div>
+        <div class="fd-stat-icon">✅</div>
+        <div class="fd-stat-num">Active</div>
+        <div class="fd-stat-lbl">Account Status</div>
+        <div class="fd-stat-desc">Your account is ready for product management and order handling.</div>
+      </div>
+    </div>
+
+    <div class="fd-actions">
+      <div class="action-card">
+        <h3>Manage Products</h3>
+        <p>Review your listings, fix weak details, and keep product information clean and current.</p>
+        <a href="{% url 'farmer_products' %}" class="btn-action-primary">My Products </a>
+      </div>
+      <div class="action-card">
+        <h3>Create New Listing</h3>
+        <p>Add fresh produce with proper pricing, stock quantity, and images that don't look careless.</p>
+        <a href="{% url 'add_product' %}" class="btn-action-primary">+ Add Product</a>
+      </div>
+      <div class="action-card">
+        <h3>Track Orders</h3>
+        <p>Check incoming orders and stay clear on what needs action instead of operating blindly.</p>
+        <a href="{% url 'farmer_orders' %}" class="btn-action-secondary">View Orders </a>
+      </div>
+    </div>
+
+   
+    <div class="fd-insight">
+      <div class="insight-card">
+        <div class="sec-kicker">Seller Guidance</div>
+        <div class="sec-title">What actually improves sales</div>
+        <div class="sec-text">
+          Farmers don't need fancy dashboards. They need clear actions. Better images, realistic pricing, updated stock, and useful descriptions matter more than decorative junk.
+        </div>
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon">📸</div>
+            <div>
+              <h4>Use better product images</h4>
+              <p>No image or low-quality image makes even a good product look untrustworthy.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">📝</div>
+            <div>
+              <h4>Write proper descriptions</h4>
+              <p>Lazy one-line text doesn't sell. Tell buyers what the item is, quality, and unit clearly.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">📊</div>
+            <div>
+              <h4>Keep stock updated</h4>
+              <p>Wrong quantity creates confusion and bad buyer experience. Update availability honestly.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="insight-card">
+        <div class="sec-kicker">Quick Access</div>
+        <div class="sec-title">Do the useful stuff faster</div>
+        <div class="sec-text">
+          The dashboard should push the next right action clearly instead of making the user search for it.
+        </div>
+        <div class="quick-panel">
+          <div class="quick-box">
+            <h4>Open my listings</h4>
+            <p>Review all products, edit weak listings, and remove outdated entries.</p>
+            <a href="{% url 'farmer_products' %}">Go to my products </a>
+          </div>
+          <div class="quick-box">
+            <h4>Add a new product</h4>
+            <p>Create a fresh listing with accurate stock, price, and image.</p>
+            <a href="{% url 'add_product' %}">Create listing </a>
+          </div>
+          <div class="quick-box">
+            <h4>Review orders</h4>
+            <p>Track what customers have ordered and what needs your attention next.</p>
+            <a href="{% url 'farmer_orders' %}">Open orders </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+
+(function() {
+  const canvas = document.getElementById('particleCanvas');
+  const ctx    = canvas.getContext('2d');
+  let W, H, particles = [];
+  const COUNT = 30;
+
+  function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+  function rand(a,b) { return a + Math.random()*(b-a); }
+
+  function spawn() {
+    return {
+      x: rand(0,W), y: rand(-40,H+40),
+      r: rand(1, 3.5),
+      vx: rand(-0.18, 0.18), vy: rand(-0.45, -0.12),
+      alpha: rand(0.06, 0.28),
+      pulse: rand(0, Math.PI*2), pv: rand(0.012, 0.025)
+    };
+  }
+
+  function init() {
+    resize();
+    particles = Array.from({length: COUNT}, spawn);
+    particles.forEach(p => { p.y = rand(0, H); });
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => {
+      p.pulse += p.pv;
+      const a = p.alpha * (0.65 + 0.35 * Math.sin(p.pulse));
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(180,180,200,${a})`;
+      ctx.fill();
+      p.x += p.vx; p.y += p.vy;
+      if (p.y < -20) { Object.assign(p, spawn()); p.y = H+10; }
+      if (p.x < -10)  p.x = W+10;
+      if (p.x > W+10) p.x = -10;
+    });
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize);
+  init(); draw();
+})();
+</script>
+
+{% endblock %}

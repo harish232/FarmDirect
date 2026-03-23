@@ -1,0 +1,538 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}FarmDirect{% endblock %}</title>
+
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+ 
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet"/>
+
+  <style>
+    :root {
+      --green:       #db984b;
+      --green-dark:  #15803d;
+      --green-light: #dcfce7;
+      --green-mid:   #86efac;
+      --amber:       #d97706;
+      --amber-light: #fef3c7;
+      --red:         #dc2626;
+      --red-light:   #fee2e2;
+      --blue:        #2563eb;
+      --blue-light:  #dbeafe;
+      --gray-50:     #f9fafb;
+      --gray-100:    #f3f4f6;
+      --gray-200:    #e5e7eb;
+      --gray-300:    #d1d5db;
+      --gray-400:    #9ca3af;
+      --gray-500:    #6b7280;
+      --gray-600:    #4b5563;
+      --gray-700:    #374151;
+      --gray-800:    #1f2937;
+      --gray-900:    #111827;
+      --white:       #ffffff;
+      --shadow-sm:   0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+      --shadow:      0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -1px rgba(0,0,0,.06);
+      --shadow-md:   0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -2px rgba(0,0,0,.05);
+      --shadow-lg:   0 20px 25px -5px rgba(0,0,0,.1), 0 10px 10px -5px rgba(0,0,0,.04);
+      --radius:      12px;
+      --radius-sm:   8px;
+      --radius-lg:   16px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-800);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+   
+    nav {
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-200);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: var(--shadow-sm);
+    }
+    .nav-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+    .nav-logo {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--green);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      letter-spacing: -.3px;
+    }
+    .logo {
+      width: 90px;
+      height: 63px;
+      object-fit: contain;
+      border-radius: 0;
+    }
+    .nav-logo .logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--green), #22c55e);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 1.1rem;
+      box-shadow: 0 2px 8px rgba(22,163,74,.35);
+    }
+    .nav-links {
+      display: flex; align-items: center; gap: 4px;
+      list-style: none; flex: 1;
+      color: #16a34a;
+    }
+    .nav-links a {
+      color: var(--gray-600);
+      text-decoration: none;
+      font-size: .875rem;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      transition: all .15s;
+      display: flex; align-items: center; gap: 7px;
+    }
+    .nav-links a:hover { color: var(--amber); background: var(--green-light); }
+    .nav-links a.active { color: var(--amber-light); background: var(--green-light); font-weight: 900; }
+    .nav-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    .nav-badge {
+      position: relative;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .badge-count {
+      position: absolute; top: -6px; right: -6px;
+      background: var(--red); color: white;
+      font-size: .65rem; font-weight: 700;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      border: 2px solid white;
+    }
+    .nav-avatar {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--green), #22c55e);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-weight: 700; font-size: .875rem;
+      cursor: pointer;
+    }
+    .nav-user-name { font-size: .875rem; font-weight: 600; color: var(--gray-700); }
+    .nav-role-pill {
+      font-size: .7rem; font-weight: 600;
+      padding: 2px 8px; border-radius: 99px;
+      text-transform: capitalize;
+    }
+    .role-farmer  { background: var(--green-light); color: var(--green-dark); }
+    .role-customer{ background: var(--blue-light);  color: var(--blue); }
+    .role-admin   { background: #fce7f3; color: #be185d; }
+    .role-delivery{ background: var(--amber-light); color: var(--amber); }
+
+    
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 8px; padding: 10px 20px;
+      border-radius: var(--radius-sm); font-size: .875rem;
+      font-weight: 600; cursor: pointer;
+      text-decoration: none; border: none;
+      transition: all .15s ease;
+      font-family: 'Inter', sans-serif;
+      white-space: nowrap;
+    }
+    .btn-sm  { padding: 6px 14px; font-size: .8rem; }
+    .btn-lg  { padding: 13px 28px; font-size: 1rem; }
+    .btn-primary  { background: var(--green); color: white; box-shadow: 0 1px 3px rgba(22,163,74,.3); }
+    .btn-primary:hover  { background: var(--green-dark); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(22,163,74,.35); }
+    .btn-secondary{ background: var(--white); color: var(--gray-700); border: 1px solid var(--gray-300); }
+    .btn-secondary:hover{ background: var(--gray-50); border-color: var(--gray-400); }
+    .btn-danger   { background: var(--red); color: white; }
+    .btn-danger:hover   { background: #b91c1c; }
+    .btn-amber    { background: var(--amber); color: white; }
+    .btn-amber:hover    { background: #b45309; }
+    .btn-outline  { background: transparent; color: var(--green); border: 2px solid var(--green); }
+    .btn-outline:hover  { background: var(--green); color: white; }
+    .btn-ghost    { background: transparent; color: var(--gray-600); }
+    .btn-ghost:hover    { background: var(--gray-100); color: var(--gray-800); }
+    .btn:active   { transform: translateY(0); }
+
+    
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--gray-200);
+      overflow: hidden;
+    }
+    .card-body { padding: 24px; }
+    .card-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--gray-100);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .card-title {
+      font-size: 1rem; font-weight: 700;
+      color: var(--gray-800);
+      display: flex; align-items: center; gap: 10px;
+    }
+
+    
+    .stat-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 24px;
+      border: 1px solid var(--gray-200);
+      box-shadow: var(--shadow-sm);
+      display: flex; align-items: flex-start;
+      gap: 16px;
+      transition: box-shadow .2s;
+    }
+    .stat-card:hover { box-shadow: var(--shadow-md); }
+    .stat-icon {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; flex-shrink: 0;
+    }
+    .stat-green  { background: var(--green-light); color: var(--green); }
+    .stat-blue   { background: var(--blue-light);  color: var(--blue); }
+    .stat-amber  { background: var(--amber-light); color: var(--amber); }
+    .stat-red    { background: var(--red-light);   color: var(--red); }
+    .stat-purple { background: #ede9fe; color: #7c3aed; }
+    .stat-value  { font-size: 1.75rem; font-weight: 800; color: var(--gray-900); line-height: 1; margin-bottom: 4px; }
+    .stat-label  { font-size: .8rem; color: var(--gray-500); font-weight: 500; }
+
+    
+    .form-group { margin-bottom: 18px; }
+    label {
+      display: block; font-size: .875rem;
+      font-weight: 600; color: var(--gray-700);
+      margin-bottom: 6px;
+    }
+    .form-control, select, textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid var(--gray-300);
+      border-radius: var(--radius-sm);
+      font-size: .875rem;
+      color: var(--gray-800);
+      background: var(--white);
+      font-family: 'Inter', sans-serif;
+      transition: border-color .15s, box-shadow .15s;
+      outline: none;
+    }
+    .form-control:focus, select:focus, textarea:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(22,163,74,.12);
+    }
+    .input-icon { position: relative; }
+    .input-icon i {
+      position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+      color: var(--gray-400); font-size: .9rem; pointer-events: none;
+    }
+    .input-icon .form-control { padding-left: 38px; }
+
+   
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+    thead th {
+      background: var(--gray-50);
+      color: var(--gray-500);
+      font-size: .75rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .05em;
+      padding: 12px 16px; text-align: left;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    tbody td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--gray-100);
+      color: var(--gray-700);
+      vertical-align: middle;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: var(--gray-50); }
+
+    
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 99px;
+      font-size: .72rem; font-weight: 700;
+      text-transform: capitalize;
+    }
+    .badge-green   { background: var(--green-light);  color: var(--green-dark); }
+    .badge-amber   { background: var(--amber-light);  color: var(--amber); }
+    .badge-red     { background: var(--red-light);    color: var(--red); }
+    .badge-blue    { background: var(--blue-light);   color: var(--blue); }
+    .badge-gray    { background: var(--gray-100);     color: var(--gray-600); }
+    .badge-purple  { background: #ede9fe; color: #7c3aed; }
+
+    
+    .alert {
+      padding: 12px 16px; border-radius: var(--radius-sm);
+      font-size: .875rem; font-weight: 500;
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 16px;
+    }
+    .alert-success { background: var(--green-light); color: var(--green-dark); border-left: 4px solid var(--green); }
+    .alert-error   { background: var(--red-light);   color: var(--red);        border-left: 4px solid var(--red); }
+    .alert-warning { background: var(--amber-light);  color: var(--amber);      border-left: 4px solid var(--amber); }
+    .alert-info    { background: var(--blue-light);   color: var(--blue);       border-left: 4px solid var(--blue); }
+
+    .container { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+    .page-header {
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-200);
+      padding: 24px 0; margin-bottom: 32px;
+    }
+    .page-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.6rem; font-weight: 700;
+      color: var(--gray-900);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .page-title .title-icon {
+      width: 42px; height: 42px;
+      background: linear-gradient(135deg, var(--green), #22c55e);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 1.1rem;
+      box-shadow: 0 4px 12px rgba(22,163,74,.3);
+    }
+    .main-content { flex: 1; padding: 32px 0; }
+    .grid { display: grid; gap: 24px; }
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+    .grid-4 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .flex { display: flex; }
+    .flex-center { display: flex; align-items: center; }
+    .flex-between { display: flex; align-items: center; justify-content: space-between; }
+    .gap-8 { gap: 8px; } .gap-12 { gap: 12px; } .gap-16 { gap: 16px; } .gap-24 { gap: 24px; }
+    .mt-8 { margin-top: 8px; } .mt-16 { margin-top: 16px; } .mt-24 { margin-top: 24px; } .mt-32 { margin-top: 32px; }
+    .mb-8 { margin-bottom: 8px; } .mb-16 { margin-bottom: 16px; } .mb-24 { margin-bottom: 24px; }
+    .text-sm { font-size: .875rem; } .text-xs { font-size: .75rem; }
+    .text-gray { color: var(--gray-500); } .text-green { color: var(--green); }
+    .font-bold { font-weight: 700; } .font-semibold { font-weight: 600; }
+    .rounded { border-radius: var(--radius); } .rounded-sm { border-radius: var(--radius-sm); }
+
+ 
+    footer {
+      background: var(--gray-800);
+      color: var(--gray-400);
+      text-align: center;
+      padding: 20px 24px;
+      font-size: .8rem;
+      margin-top: auto;
+    }
+    footer strong { color: var(--green-mid); }
+
+    
+    .product-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      border: 1px solid var(--gray-200);
+      overflow: hidden;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .product-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+    .product-card-img {
+      width: 100%; height: 180px;
+      object-fit: cover; background: var(--gray-100);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3.5rem; color: var(--gray-300);
+    }
+    .product-card-body { padding: 16px; }
+    .product-card-name { font-weight: 700; font-size: .95rem; color: var(--gray-800); margin-bottom: 4px; }
+    .product-card-price { font-size: 1.1rem; font-weight: 800; color: var(--green); }
+    .product-card-meta { font-size: .78rem; color: var(--gray-500); margin-top: 6px; }
+
+   
+    .empty-state {
+      text-align: center; padding: 64px 32px;
+      color: var(--gray-400);
+    }
+    .empty-state i { font-size: 3.5rem; margin-bottom: 16px; color: var(--gray-300); }
+    .empty-state h3 { font-size: 1.1rem; color: var(--gray-500); margin-bottom: 8px; }
+    .empty-state p { font-size: .875rem; margin-bottom: 24px; }
+
+    
+    .nav-profile-wrap { position: relative; }
+    .nav-dropdown {
+      display: none;
+      position: absolute; top: calc(100% + 10px); right: 0;
+      width: 230px;
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      z-index: 9999;
+      overflow: hidden;
+      animation: ddFadeIn .18s ease;
+    }
+    .nav-dropdown.open { display: block; }
+    @keyframes ddFadeIn {
+      from { opacity:0; transform:translateY(-6px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .nav-dropdown-header {
+      padding: 14px 16px;
+      background: var(--gray-50);
+      border-bottom: 1px solid var(--gray-100);
+    }
+    .nav-dropdown-body { padding: 6px 0; }
+    .nav-dd-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 16px;
+      font-size: .85rem; font-weight: 500;
+      color: var(--gray-700);
+      text-decoration: none;
+      transition: background .12s;
+    }
+    .nav-dd-item:hover { background: var(--gray-50); color: var(--green); }
+    .nav-dd-item i { width: 16px; color: var(--gray-400); font-size: .8rem; }
+    .nav-dd-item:hover i { color: var(--green); }
+    .nav-dd-divider { height: 1px; background: var(--gray-100); margin: 4px 0; }
+    .nav-dd-danger { color: var(--red) !important; }
+    .nav-dd-danger:hover { background: var(--red-light) !important; }
+    .nav-dd-danger i { color: var(--red) !important; }
+
+    
+    @media (max-width: 768px) {
+      .nav-inner { padding: 0 16px; gap: 16px; }
+      .nav-links { display: none; }
+      .container { padding: 0 16px; }
+      .main-content { padding: 20px 0; }
+      .page-title { font-size: 1.2rem; }
+      .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    }
+    
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+
+<nav>
+  <div class="nav-inner">
+    <a href="{% url 'dashboard' %}" class="nav-logo">
+      <img src="{% static 'images/logo.png' %}" class="logo" alt="FarmDirect Logo">
+      FarmDirect
+    </a>
+
+    {% if user.is_authenticated %}
+    <ul class="nav-links">
+      {% if user.is_farmer %}
+        <li class="nav"><a href="{% url 'dashboard' %}"><i class="fa-solid fa-tachograph-digital"></i> Dashboard</a></li>
+        <li><a href="{% url 'farmer_products' %}"><i class="fa-solid fa-box-open"></i> My Products</a></li>
+        <li><a href="{% url 'farmer_orders' %}"><i class="fa-solid fa-receipt"></i> Orders</a></li>
+        <li><a href="{% url 'farmer_earnings' %}"><i class="fa-solid fa-indian-rupee-sign"></i> Earnings</a></li>
+        <li><a href="{% url 'about' %}"><i class="fa-solid fa-circle-info"></i> About</a></li>
+      {% elif user.is_admin_user or user.is_staff %}
+        <li><a href="{% url 'admin_dashboard' %}"><i class="fa-solid fa-chart-pie"></i> Admin</a></li>
+      {% else %}
+        <li><a href="{% url 'dashboard' %}"><i class="fa-solid fa-house"></i> Home</a></li>
+        <li><a href="{% url 'product_list' %}"><i class="fa-solid fa-store"></i> Shop</a></li>
+        <li><a href="{% url 'my_orders' %}"><i class="fa-solid fa-bag-shopping"></i> My Orders</a></li>
+        <li><a href="{% url 'about' %}"><i class="fa-solid fa-circle-info"></i> About</a></li>
+      {% endif %}
+    </ul>
+
+    <div class="nav-right">
+      {% if not user.is_farmer and not user.is_staff %}
+      <a href="{% url 'view_cart' %}" class="nav-badge btn btn-ghost btn-sm" style="color:var(--gray-600)">
+        <i class="fa-solid fa-cart-shopping"></i>
+        <span class="badge-count" id="cart-count">0</span>
+      </a>
+      {% endif %}
+
+      
+      <div class="nav-profile-wrap" id="navProfileWrap">
+        <div class="nav-avatar" id="navAvatarBtn" onclick="toggleProfileMenu()">
+          {% if user.profile_pic %}
+            <img src="{{ user.profile_pic.url }}" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>
+          {% else %}
+            {{ user.username|first|upper }}
+          {% endif %}
+        </div>
+        <div class="nav-dropdown" id="navDropdown">
+          <div class="nav-dropdown-header">
+            <div style="font-weight:700;font-size:.9rem;color:var(--gray-800)">{{ user.get_full_name|default:user.username }}</div>
+            <div style="font-size:.75rem;color:var(--gray-500)">{{ user.email }}</div>
+            <span class="nav-role-pill role-{{ user.role }}" style="margin-top:4px;display:inline-block">{{ user.role }}</span>
+          </div>
+          <div class="nav-dropdown-body">
+            <a href="{% url 'profile' %}" class="nav-dd-item"><i class="fa-solid fa-user"></i> My Profile</a>
+            <a href="{% url 'edit_profile' %}" class="nav-dd-item"><i class="fa-solid fa-pen-to-square"></i> Edit Profile</a>
+            <a href="{% url 'settings' %}" class="nav-dd-item"><i class="fa-solid fa-gear"></i> Settings</a>
+            <a href="{% url 'support' %}" class="nav-dd-item"><i class="fa-solid fa-headset"></i> Customer Support</a>
+            <a href="{% url 'about' %}" class="nav-dd-item"><i class="fa-solid fa-circle-info"></i> About FarmDirect</a>
+            <div class="nav-dd-divider"></div>
+            <a href="{% url 'logout' %}" class="nav-dd-item nav-dd-danger"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+          </div>
+        </div>
+      </div>
+
+      <div style="line-height:1.2">
+        <div class="nav-user-name">{{ user.username }}</div>
+        <span class="nav-role-pill role-{{ user.role }}">{{ user.role }}</span>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</nav>
+
+
+{% if messages %}
+<div class="container" style="padding-top:16px;">
+  {% for msg in messages %}
+    <div class="alert alert-{% if msg.tags == 'error' %}error{% elif msg.tags == 'warning' %}warning{% elif msg.tags == 'info' %}info{% else %}success{% endif %}">
+      <i class="fa-solid fa-{% if msg.tags == 'error' %}circle-exclamation{% elif msg.tags == 'warning' %}triangle-exclamation{% elif msg.tags == 'info' %}circle-info{% else %}circle-check{% endif %}"></i>
+      {{ msg }}
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+
+<main class="main-content">
+  {% block content %}{% endblock %}
+</main>
+
+
+<footer>
+  <strong>FarmDirect</strong>&nbsp;|&nbsp;Fresh from Farm to Your Table &nbsp;|&nbsp;
+  <i class="fa-solid fa-seedling"></i> Made with love for farmers &nbsp;|&nbsp;
+  &copy; 2026
+</footer>
+
+{% block extra_js %}{% endblock %}
+<script>
+function toggleProfileMenu() {
+  const dd = document.getElementById('navDropdown');
+  dd.classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  const wrap = document.getElementById('navProfileWrap');
+  if (wrap && !wrap.contains(e.target)) {
+    document.getElementById('navDropdown')?.classList.remove('open');
+  }
+});
+</script>
+</body>
+</html>
