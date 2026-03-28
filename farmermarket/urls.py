@@ -45,4 +45,5 @@ urlpatterns = [
          name='password_reset_complete'),
 
     path('api/token/', obtain_auth_token, name='api_token'),
+    path('accounts/', include('allauth.urls')),  # Google OAuth
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

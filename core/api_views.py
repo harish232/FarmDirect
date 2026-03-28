@@ -74,7 +74,7 @@ def api_product_detail(request, pk):
 @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser, JSONParser])
 def api_add_product(request):
-    if not request.user.is_farmer():
+    if not request.user.is_farmer:
         return Response({'error': 'Only farmers can add products!'}, status=status.HTTP_403_FORBIDDEN)
     serializer = ProductSerializer(data=request.data)
     if serializer.is_valid():
@@ -114,7 +114,7 @@ def api_delete_product(request, pk):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def api_my_orders(request):
-    if request.user.is_farmer():
+    if request.user.is_farmer:
         orders = Order.objects.filter(product__farmer=request.user).order_by('-ordered_at')
     elif request.user.is_delivery():
         orders = Order.objects.filter(delivery_partner=request.user).order_by('-ordered_at')
@@ -127,7 +127,7 @@ def api_my_orders(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def api_place_order(request):
-    if request.user.is_farmer():
+    if request.user.is_farmer:
         return Response({'error': 'Farmers cannot place orders!'}, status=status.HTTP_403_FORBIDDEN)
 
     cart_items = Cart.objects.filter(customer=request.user)
@@ -196,7 +196,7 @@ def api_place_order(request):
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def api_update_order(request, pk):
-    if request.user.is_farmer():
+    if request.user.is_farmer:
         try:
             order = Order.objects.get(pk=pk, product__farmer=request.user)
         except Order.DoesNotExist:
@@ -319,7 +319,7 @@ def api_apply_coupon(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def api_add_review(request, product_pk):
-    if not request.user.is_customer():
+    if not request.user.is_customer:
         return Response({'error': 'Only customers can review!'}, status=status.HTTP_403_FORBIDDEN)
     try:
         product = Product.objects.get(pk=product_pk)
@@ -402,7 +402,7 @@ def api_cancel_subscription(request, pk):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def api_farmer_earnings(request):
-    if not request.user.is_farmer():
+    if not request.user.is_farmer:
         return Response({'error': 'Only farmers can view earnings!'}, status=status.HTTP_403_FORBIDDEN)
     earnings = FarmerEarning.objects.filter(farmer=request.user).order_by('-created_at')
     total_earned = earnings.aggregate(total=Sum('net_amount'))['total'] or 0
@@ -533,7 +533,7 @@ def api_razorpay_verify(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def api_admin_analytics(request):
-    if not (request.user.is_admin_user() or request.user.is_staff):
+    if not (request.user.is_admin_user or request.user.is_staff):
         return Response({'error': 'Admin only!'}, status=status.HTTP_403_FORBIDDEN)
     total_orders = Order.objects.count()
     total_revenue = Order.objects.filter(status='delivered').aggregate(total=Sum('total_price'))['total'] or 0

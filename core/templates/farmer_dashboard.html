@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
+<script>document.body.classList.add("page-dark");</script>
 
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
 
@@ -10,13 +11,13 @@
   
   --void:   white;
   --charcoal:#02181b;
-  --iron:    #eaea29;
-  --steel:   #d27c14;
-  --silver:  #14a0c0;
+  --iron:    #2a2a31;
+  --steel:   #3c3c47;
+  --silver:  #a0a0b4;
   --mist:    #c8c8d8;
   --snow:    #eeeef4;
-  --glass: #14a0c0  ;
-  --border:  #14a0c0;
+  --glass:   rgba(255,255,255,0.04);
+  --border:  rgba(255,255,255,0.06);
 }
 
 
@@ -57,7 +58,7 @@ body { background: var(--void); }
   margin-bottom: 24px;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 40px 80px rgba(215, 196, 84, 0.5);
+  box-shadow: 0 40px 80px rgba(0,0,0,0.50);
   opacity: 0;
   animation: riseIn 0.8s cubic-bezier(.22,.68,0,1.2) 0.05s forwards;
 }

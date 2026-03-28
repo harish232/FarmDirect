@@ -60,3 +60,6 @@ class FarmerEarningAdmin(admin.ModelAdmin):
     list_display = ['farmer', 'order', 'amount', 'platform_fee', 'net_amount', 'is_paid', 'created_at']
     list_filter = ['is_paid']
     search_fields = ['farmer__username']
+
+
+

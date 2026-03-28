@@ -62,6 +62,17 @@
       z-index: 1000;
       box-shadow: var(--shadow-sm);
     }
+    /* Dark page nav override — used by cart, farmer dashboard, etc. */
+    body.page-dark nav {
+      background: #16181d;
+      border-bottom-color: rgba(255,255,255,0.08);
+    }
+    body.page-dark nav .nav-logo { color: #eeeef4; }
+    body.page-dark nav .nav-links a { color: rgba(220,220,230,0.7); }
+    body.page-dark nav .nav-links a:hover { color: #fff; background: rgba(255,255,255,0.08); }
+    body.page-dark nav .nav-user-name { color: #ddd; }
+    body.page-dark nav .btn-ghost { color: rgba(220,220,230,0.8); }
+    body.page-dark nav .btn-ghost:hover { background: rgba(255,255,255,0.08); }
     .nav-inner {
       max-width: 1280px;
       margin: 0 auto;
@@ -416,12 +427,38 @@
     @media (max-width: 768px) {
       .nav-inner { padding: 0 16px; gap: 16px; }
       .nav-links { display: none; }
+      .nav-links.mobile-open {
+        display: flex; flex-direction: column;
+        position: absolute; top: 64px; left: 0; right: 0;
+        background: var(--white);
+        border-bottom: 1px solid var(--gray-200);
+        box-shadow: var(--shadow-md);
+        padding: 8px 16px 16px;
+        z-index: 999;
+        gap: 2px;
+      }
+      body.page-dark .nav-links.mobile-open {
+        background: #16181d;
+        border-bottom-color: rgba(255,255,255,0.08);
+      }
+      .hamburger-btn {
+        display: flex; align-items: center; justify-content: center;
+        width: 36px; height: 36px;
+        background: none; border: none;
+        cursor: pointer; font-size: 1.1rem;
+        color: var(--gray-600); border-radius: var(--radius-sm);
+        margin-right: auto;
+      }
+      .hamburger-btn:hover { background: var(--gray-100); }
+      body.page-dark .hamburger-btn { color: #ccc; }
       .container { padding: 0 16px; }
       .main-content { padding: 20px 0; }
       .page-title { font-size: 1.2rem; }
       .grid-4 { grid-template-columns: repeat(2, 1fr); }
     }
-    
+    @media (min-width: 769px) {
+      .hamburger-btn { display: none; }
+    }
   </style>
   {% block extra_css %}{% endblock %}
 </head>
@@ -436,7 +473,11 @@
     </a>
 
     {% if user.is_authenticated %}
-    <ul class="nav-links">
+    <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMobileNav()" aria-label="Menu">
+      <i class="fa-solid fa-bars" id="hamburgerIcon"></i>
+    </button>
+
+    <ul class="nav-links" id="navLinks">
       {% if user.is_farmer %}
         <li class="nav"><a href="{% url 'dashboard' %}"><i class="fa-solid fa-tachograph-digital"></i> Dashboard</a></li>
         <li><a href="{% url 'farmer_products' %}"><i class="fa-solid fa-box-open"></i> My Products</a></li>
@@ -523,9 +564,9 @@
 
 {% block extra_js %}{% endblock %}
 <script>
+// ── Profile dropdown ──────────────────────────────────────────
 function toggleProfileMenu() {
-  const dd = document.getElementById('navDropdown');
-  dd.classList.toggle('open');
+  document.getElementById('navDropdown')?.classList.toggle('open');
 }
 document.addEventListener('click', function(e) {
   const wrap = document.getElementById('navProfileWrap');
@@ -533,6 +574,55 @@ document.addEventListener('click', function(e) {
     document.getElementById('navDropdown')?.classList.remove('open');
   }
 });
+
+// ── Mobile hamburger nav ──────────────────────────────────────
+function toggleMobileNav() {
+  const links = document.getElementById('navLinks');
+  const icon  = document.getElementById('hamburgerIcon');
+  if (!links) return;
+  const open = links.classList.toggle('mobile-open');
+  if (icon) {
+    icon.className = open ? 'fa-solid fa-xmark' : 'fa-solid fa-bars';
+  }
+}
+// Close mobile nav when a link is clicked
+document.addEventListener('DOMContentLoaded', function() {
+  const navLinks = document.getElementById('navLinks');
+  if (navLinks) {
+    navLinks.querySelectorAll('a').forEach(function(a) {
+      a.addEventListener('click', function() {
+        navLinks.classList.remove('mobile-open');
+        const icon = document.getElementById('hamburgerIcon');
+        if (icon) icon.className = 'fa-solid fa-bars';
+      });
+    });
+  }
+});
+// Close mobile nav on outside click
+document.addEventListener('click', function(e) {
+  const btn   = document.getElementById('hamburgerBtn');
+  const links = document.getElementById('navLinks');
+  if (links && btn && !btn.contains(e.target) && !links.contains(e.target)) {
+    links.classList.remove('mobile-open');
+    const icon = document.getElementById('hamburgerIcon');
+    if (icon) icon.className = 'fa-solid fa-bars';
+  }
+});
+
+// ── Live cart count ───────────────────────────────────────────
+(function updateCartCount() {
+  const badge = document.getElementById('cart-count');
+  if (!badge) return;
+  fetch('/api/cart/', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+    .then(function(r) { return r.ok ? r.json() : null; })
+    .then(function(data) {
+      if (data && typeof data.count !== 'undefined') {
+        badge.textContent = data.count;
+        badge.style.display = data.count > 0 ? 'flex' : 'none';
+      }
+    })
+    .catch(function() {});
+})();
 </script>
 </body>
 </html>

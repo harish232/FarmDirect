@@ -21,32 +21,49 @@ def register_view(request):
         phone = request.POST.get('phone', '')
         address = request.POST.get('address', '')
 
+        # Validation checks
         if not username:
-            messages.error(request, 'Username required!')
+            messages.error(request, 'Username is required!')
             return redirect('register')
-        if User.objects.filter(username=username).exists():
-            messages.error(request, 'Username already taken!')
+        if len(username) < 3:
+            messages.error(request, 'Username must be at least 3 characters!')
+            return redirect('register')
+        if User.objects.filter(username__iexact=username).exists():
+            messages.error(request, f'Username "{username}" is already taken. Please choose a different one.')
             return redirect('register')
         if not email or '@' not in email:
-            messages.error(request, 'Invalid email!')
+            messages.error(request, 'Please enter a valid email address!')
             return redirect('register')
-        if User.objects.filter(email=email).exists():
-            messages.error(request, 'Email already exists!')
+        if User.objects.filter(email__iexact=email).exists():
+            messages.error(request, 'An account with this email already exists. Try logging in instead.')
             return redirect('register')
         if len(password) < 6:
-            messages.error(request, 'Password must be 6+ characters!')
+            messages.error(request, 'Password must be at least 6 characters!')
             return redirect('register')
         if role not in ['farmer', 'customer', 'delivery']:
-            messages.error(request, 'Invalid role!')
+            messages.error(request, 'Invalid role selected!')
             return redirect('register')
 
-       
-        user = User.objects.create_user(
-            username=username, email=email, password=password,
-            role=role, phone=phone, address=address,
-        )
-        login(request, user)
-        return redirect('dashboard')  
+        try:
+            # FIX: create user first, then set custom fields separately
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+            )
+            user.role = role
+            user.phone = phone
+            user.address = address
+            user.save()
+
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            messages.success(request, f'Welcome to FarmDirect, {username}!')
+            return redirect('dashboard')
+        except Exception as e:
+            import traceback
+            traceback.print_exc()  
+            messages.error(request, f'Registration failed: {str(e)}')
+            return redirect('register')
 
     return render(request, 'register.html')
 
@@ -74,7 +91,7 @@ def logout_view(request):
 def dashboard_view(request):
     if not request.user.is_authenticated:
         return redirect('login')
-    if request.user.is_farmer():
+    if request.user.is_farmer:
         products = Product.objects.filter(farmer=request.user, is_active=True)
         orders = Order.objects.filter(product__farmer=request.user).order_by('-ordered_at')[:5]
         earnings = FarmerEarning.objects.filter(farmer=request.user)
@@ -86,8 +103,24 @@ def dashboard_view(request):
             'total_products': products.count(),
             'total_orders': Order.objects.filter(product__farmer=request.user).count(),
         })
-    elif request.user.is_admin_user() or request.user.is_staff:
+    elif request.user.is_admin_user or request.user.is_staff:
         return redirect('admin_dashboard')
+    elif request.user.is_delivery:
+        active_deliveries = Order.objects.filter(
+            delivery_partner=request.user
+        ).exclude(status__in=['delivered', 'cancelled']).order_by('-ordered_at')
+        recent_delivered = Order.objects.filter(
+            delivery_partner=request.user, status='delivered'
+        ).order_by('-delivered_at')[:8]
+        total_delivered = Order.objects.filter(
+            delivery_partner=request.user, status='delivered'
+        ).count()
+        return render(request, 'delivery_dashboard.html', {
+            'active_deliveries': active_deliveries,
+            'recent_delivered': recent_delivered,
+            'total_delivered': total_delivered,
+            'total_earnings': 0,
+        })
     else:
         orders = Order.objects.filter(customer=request.user).order_by('-ordered_at')[:5]
         cart_count = Cart.objects.filter(customer=request.user).count()
@@ -97,11 +130,9 @@ def dashboard_view(request):
         })
 
 
-
-
 @login_required
 def farmer_products(request):
-    if not request.user.is_farmer():
+    if not request.user.is_farmer:
         return redirect('dashboard')
     products = Product.objects.filter(farmer=request.user).order_by('-created_at')
     return render(request, 'farmer_products.html', {'products': products})
@@ -109,7 +140,7 @@ def farmer_products(request):
 
 @login_required
 def add_product(request):
-    if not request.user.is_farmer():
+    if not request.user.is_farmer:
         return redirect('dashboard')
     if request.method == 'POST':
         Product.objects.create(
@@ -128,7 +159,7 @@ def add_product(request):
 
 @login_required
 def edit_product(request, pk):
-    if not request.user.is_farmer():
+    if not request.user.is_farmer:
         return redirect('dashboard')
     product = get_object_or_404(Product, pk=pk, farmer=request.user)
     if request.method == 'POST':
@@ -147,7 +178,7 @@ def edit_product(request, pk):
 
 @login_required
 def delete_product(request, pk):
-    if not request.user.is_farmer():
+    if not request.user.is_farmer:
         return redirect('dashboard')
     product = get_object_or_404(Product, pk=pk, farmer=request.user)
     product.delete()
@@ -157,7 +188,7 @@ def delete_product(request, pk):
 
 @login_required
 def farmer_orders(request):
-    if not request.user.is_farmer():
+    if not request.user.is_farmer:
         return redirect('dashboard')
     orders = Order.objects.filter(product__farmer=request.user).order_by('-ordered_at')
     return render(request, 'farmer_orders.html', {'orders': orders})
@@ -165,7 +196,7 @@ def farmer_orders(request):
 
 @login_required
 def update_order_status(request, pk):
-    if not request.user.is_farmer():
+    if not request.user.is_farmer:
         return redirect('dashboard')
     order = get_object_or_404(Order, pk=pk, product__farmer=request.user)
     if request.method == 'POST':
@@ -184,7 +215,7 @@ def update_order_status(request, pk):
 
 @login_required
 def farmer_earnings_view(request):
-    if not request.user.is_farmer():
+    if not request.user.is_farmer:
         return redirect('dashboard')
     earnings = FarmerEarning.objects.filter(farmer=request.user).order_by('-created_at')
     total_earned = earnings.aggregate(total=Sum('net_amount'))['total'] or 0
@@ -194,10 +225,9 @@ def farmer_earnings_view(request):
     })
 
 
-
-
 @login_required
 def product_list(request):
+    from .models import Category
     query = request.GET.get('q', '')
     category_id = request.GET.get('category', '')
     products = Product.objects.filter(stock__gt=0, is_active=True)
@@ -205,7 +235,13 @@ def product_list(request):
         products = products.filter(name__icontains=query)
     if category_id:
         products = products.filter(category__id=category_id)
-    return render(request, 'product_list.html', {'products': products, 'query': query})
+    categories = Category.objects.all()
+    return render(request, 'product_list.html', {
+        'products': products,
+        'query': query,
+        'categories': categories,
+        'active_category': category_id,
+    })
 
 
 @login_required
@@ -314,7 +350,6 @@ def place_order(request):
             except Coupon.DoesNotExist:
                 pass
 
-        # FIXED: Decimal గా convert చేశాము — float error రాదు
         platform_fee_pct = Decimal(str(getattr(settings, 'PLATFORM_FEE_PERCENT', 10))) / Decimal('100')
 
         for item in cart_items:
@@ -375,11 +410,9 @@ def add_review_view(request, order_pk):
     return redirect('my_orders')
 
 
-
-
 @login_required
 def admin_dashboard_view(request):
-    if not (request.user.is_admin_user() or request.user.is_staff):
+    if not (request.user.is_admin_user or request.user.is_staff):
         return redirect('dashboard')
     total_orders = Order.objects.count()
     total_revenue = Order.objects.filter(status='delivered').aggregate(total=Sum('total_price'))['total'] or 0
@@ -392,8 +425,6 @@ def admin_dashboard_view(request):
         'total_farmers': total_farmers, 'total_customers': total_customers,
         'pending_orders': pending_orders, 'recent_orders': recent_orders,
     })
-
-
 
 
 @login_required
@@ -441,8 +472,6 @@ def settings_view(request):
     return render(request, 'settings.html')
 
 
-
-
 @login_required
 def support_view(request):
     tickets = SupportTicket.objects.filter(user=request.user)
@@ -460,8 +489,6 @@ def support_view(request):
         else:
             messages.error(request, 'Please fill in all fields.')
     return render(request, 'support.html', {'tickets': tickets})
-
-
 
 
 def about_view(request):

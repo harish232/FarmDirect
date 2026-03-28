@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
+<script>document.body.classList.add("page-dark");</script>
 
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
 
@@ -209,6 +210,29 @@ body { background: var(--void); }
   white-space: nowrap;
 }
 .btn-clear:hover { border-color: var(--silver); color: var(--mist); }
+
+.cat-chips {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin-top: 14px; padding-top: 14px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.cat-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 7px 14px; border-radius: 999px;
+  font-size: 13px; font-weight: 600;
+  text-decoration: none;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+  color: var(--silver);
+  transition: all .18s;
+}
+.cat-chip:hover { border-color: var(--silver); color: var(--mist); }
+.cat-chip-active {
+  background: linear-gradient(135deg, var(--iron), var(--steel));
+  border-color: rgba(255,255,255,0.12);
+  color: var(--snow);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+}
 
 .search-note {
   font-size: 12.5px; color: rgba(200,200,216,0.34);
@@ -450,6 +474,22 @@ body { background: var(--void); }
         <button type="submit" class="btn-search">Search</button>
         <a href="{% url 'product_list' %}" class="btn-clear">Clear</a>
       </form>
+
+      {% if categories %}
+      <div class="cat-chips">
+        <a href="{% url 'product_list' %}{% if query %}?q={{ query }}{% endif %}"
+           class="cat-chip {% if not active_category %}cat-chip-active{% endif %}">
+          All
+        </a>
+        {% for cat in categories %}
+        <a href="?category={{ cat.id }}{% if query %}&q={{ query }}{% endif %}"
+           class="cat-chip {% if active_category == cat.id|stringformat:'s' %}cat-chip-active{% endif %}">
+          {{ cat.icon }} {{ cat.name }}
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+
       <div class="search-note">
         Search is fast and instant. Type a product name and results update immediately.
       </div>
@@ -468,9 +508,9 @@ body { background: var(--void); }
             <div class="prod-placeholder">🌾</div>
           {% endif %}
 
-          {% if product.quantity == 0 %}
+          {% if product.stock == 0 %}
             <div class="prod-stock-badge sb-out"><i class="fa-solid fa-circle-xmark"></i> Out of Stock</div>
-          {% elif product.quantity <= 10 %}
+          {% elif product.stock <= 10 %}
             <div class="prod-stock-badge sb-low"><i class="fa-solid fa-triangle-exclamation"></i> Low Stock</div>
           {% else %}
             <div class="prod-stock-badge sb-good"><i class="fa-solid fa-check"></i> In Stock</div>
@@ -490,13 +530,13 @@ body { background: var(--void); }
             </div>
             <div class="meta-box">
               <div class="meta-label">Stock</div>
-              <div class="meta-value">{{ product.quantity }} {{ product.unit }}</div>
+              <div class="meta-value">{{ product.stock }} {{ product.unit }}</div>
             </div>
           </div>
 
           <div class="prod-actions">
             <div class="price-chip"><i class="fa-solid fa-indian-rupee-sign"></i>{{ product.price }}</div>
-            {% if product.quantity == 0 %}
+            {% if product.stock == 0 %}
               <div class="btn-unavailable">Unavailable</div>
             {% else %}
               <a href="{% url 'add_to_cart' product.pk %}" class="btn-add-cart">+ Add to Cart</a>

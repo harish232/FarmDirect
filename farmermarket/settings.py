@@ -20,7 +20,15 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'corsheaders',
     'core',
+    # Google OAuth
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
 ]
+
+SITE_ID = 1
 
 AUTH_USER_MODEL = 'core.User'
 
@@ -33,6 +41,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'farmermarket.urls'
@@ -70,6 +79,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+    
 ]
 
 LANGUAGE_CODE = 'en-us'
@@ -82,6 +92,11 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
 
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
@@ -139,3 +154,23 @@ CELERY_TIMEZONE = 'Asia/Kolkata'
 
 INSTALLED_APPS += ['django_celery_beat']
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ── Google OAuth (django-allauth) ─────────────────────────────
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': ['profile', 'email'],
+        'AUTH_PARAMS': {'access_type': 'online'},
+        'APPS': [
+            {
+                'client_id': os.getenv('GOOGLE_CLIENT_ID'),
+                'secret': os.getenv('GOOGLE_CLIENT_SECRET'),
+                'key': '',
+            }
+        ],
+    }
+}
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_LOGIN_ON_GET = True
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_AUTHENTICATION_METHOD = 'email'

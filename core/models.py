@@ -23,15 +23,19 @@ class User(AbstractUser):
     groups = models.ManyToManyField('auth.Group', related_name='core_user_set', blank=True)
     user_permissions = models.ManyToManyField('auth.Permission', related_name='core_user_permissions', blank=True)
 
+    @property
     def is_farmer(self):
         return self.role == 'farmer'
 
+    @property
     def is_customer(self):
         return self.role == 'customer'
 
+    @property
     def is_delivery(self):
         return self.role == 'delivery'
 
+    @property
     def is_admin_user(self):
         return self.role == 'admin'
 
